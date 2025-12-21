@@ -1,0 +1,94 @@
+/* Hide default cursor */
+* {
+    cursor: none !important;
+}
+
+/* Custom cursor container */
+.cursor-dot,
+.cursor-dot-outline {
+    pointer-events: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    border-radius: 50%;
+    opacity: 0;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+    mix-blend-mode: difference;
+}
+
+.cursor-dot {
+    width: 8px;
+    height: 8px;
+    background-color: #3b82f6; /* Blue-500 */
+}
+
+.cursor-dot-outline {
+    width: 40px;
+    height: 40px;
+    background-color: rgba(59, 130, 246, 0.1);
+    border: 2px solid rgba(59, 130, 246, 0.3);
+}
+
+/* Show cursor when mouse moves */
+body:hover .cursor-dot,
+body:hover .cursor-dot-outline {
+    opacity: 1;
+}
+
+/* Interactive elements styling */
+.cursor-hover {
+    width: 60px !important;
+    height: 60px !important;
+    background-color: rgba(168, 85, 247, 0.2) !important; /* Purple-500 */
+    border-color: rgba(168, 85, 247, 0.5) !important;
+}
+
+.cursor-click {
+    width: 20px !important;
+    height: 20px !important;
+    background-color: rgba(239, 68, 68, 0.3) !important; /* Red-500 */
+    border-color: #ef4444 !important;
+}
+
+.cursor-text {
+    width: 80px !important;
+    height: 40px !important;
+    border-radius: 20px !important;
+    background-color: rgba(16, 185, 129, 0.2) !important; /* Emerald-500 */
+    border-color: rgba(16, 185, 129, 0.5) !important;
+}
+
+.cursor-link {
+    width: 50px !important;
+    height: 50px !important;
+    background-color: rgba(245, 158, 11, 0.2) !important; /* Amber-500 */
+    border-color: rgba(245, 158, 11, 0.5) !important;
+}
+
+/* Cursor trail effect */
+.cursor-trail {
+    position: fixed;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #3b82f6, #8b5cf6);
+    pointer-events: none;
+    z-index: 9998;
+    opacity: 0;
+    transform: translate(-50%, -50%);
+}
+
+/* Remove custom cursor for touch devices */
+@media (hover: none) and (pointer: coarse) {
+    * {
+        cursor: auto !important;
+    }
+    
+    .cursor-dot,
+    .cursor-dot-outline,
+    .cursor-trail {
+        display: none !important;
+    }
+}

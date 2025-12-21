@@ -1,0 +1,77 @@
+{% extends 'core/base_with_sidebar.html' %}
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
+  <div class="max-w-md mx-auto">
+    
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <div class="w-16 h-16 mx-auto mb-4 bg-indigo-600 rounded-full flex items-center justify-center">
+        <i class="fas fa-plus text-white text-xl"></i>
+      </div>
+      <h1 class="text-2xl font-bold text-gray-800">Create Course</h1>
+      <p class="text-gray-600 mt-2">Add a new subject to your teaching portfolio</p>
+    </div>
+
+    <!-- Form -->
+    <div class="bg-white rounded-xl shadow-lg p-6 animate-fade-in">
+      <form method="POST" class="space-y-6">
+        {% csrf_token %}
+        
+        {% for field in form %}
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            {{ field.label }}
+          </label>
+          {{ field }}
+          {% if field.errors %}
+            <p class="text-red-500 text-xs mt-1">{{ field.errors.0 }}</p>
+          {% endif %}
+        </div>
+        {% endfor %}
+
+        <div class="flex gap-3 pt-4">
+          <a href="{% url 'teacher_subjects' %}" 
+             class="flex-1 bg-gray-100 text-gray-700 py-3 rounded-lg font-medium text-center transition hover:bg-gray-200">
+            Cancel
+          </a>
+          <button type="submit" 
+                  class="flex-1 bg-indigo-600 text-white py-3 rounded-lg font-medium transition hover:bg-indigo-700">
+            Create Course
+          </button>
+        </div>
+      </form>
+    </div>
+
+  </div>
+</div>
+
+<style>
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+form input, form textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+form input:focus, form textarea:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+form textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+</style>
+{% endblock %}

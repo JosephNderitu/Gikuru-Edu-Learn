@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elegant Logistics Website Sections - White Background</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* ========================================
+        1. CUSTOM CSS for Elegance and Interactivity
+        ========================================
+        */
+
+        /* Team Section Grayscale Hover Effect */
+        .team-member img {
+            filter: grayscale(100%);
+            transition: filter 0.5s ease-in-out;
+        }
+
+        .team-member:hover img {
+            filter: grayscale(0%);
+        }
+
+        /* Service Card Subtle Ring Shadow on Hover */
+        .service-card:hover {
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04), inset 0 0 0 1px rgba(99, 102, 241, 0.2); /* Adding a subtle indigo ring effect */
+        }
+    </style>
+</head>
+<body class="antialiased bg-white min-h-screen">
+
+    <section id="services" class="py-16 sm:py-24 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12 sm:mb-16">
+                <h2 class="text-base font-semibold tracking-wide text-indigo-600 uppercase">Our Expertise</h2>
+                <p class="mt-2 text-3xl font-extrabold text-gray-900 sm:text-4xl">
+                    Reliable Logistics Solutions, Tailored for You
+                </p>
+                <p class="mt-4 max-w-2xl text-xl text-gray-500 mx-auto">
+                    From freight forwarding to last-mile delivery, we manage the complexity so you don't have to.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-3">
+
+                <div class="service-card group bg-white rounded-xl shadow-xl overflow-hidden transform hover:scale-[1.02] transition duration-500 ease-in-out border border-gray-100 hover:shadow-2xl">
+                    <div class="p-8">
+                        <div class="flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 text-indigo-600 mb-4 transition-all duration-500 group-hover:bg-indigo-600 group-hover:text-white">
+                            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-3">Air Freight</h3>
+                        <p class="text-base text-gray-500">
+                            Fast and reliable air cargo services for time-critical shipments globally. Speed and security guaranteed.
+                        </p>
+                        <a href="#" class="mt-4 inline-flex items-center text-indigo-600 font-medium hover:text-indigo-500 transition duration-300">
+                            Learn More
+                            <svg class="ml-2 w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="service-card group bg-white rounded-xl shadow-xl overflow-hidden transform hover:scale-[1.02] transition duration-500 ease-in-out border border-gray-100 hover:shadow-2xl">
+                    <div class="p-8">
+                        <div class="flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 text-indigo-600 mb-4 transition-all duration-500 group-hover:bg-indigo-600 group-hover:text-white">
+                            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9A9 9 0 003 12m9 9v-8" />
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-3">Ocean Freight</h3>
+                        <p class="text-base text-gray-500">
+                            Cost-effective and scalable shipping solutions for large volume cargo worldwide.
+                        </p>
+                        <a href="#" class="mt-4 inline-flex items-center text-indigo-600 font-medium hover:text-indigo-500 transition duration-300">
+                            Learn More
+                            <svg class="ml-2 w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="service-card group bg-white rounded-xl shadow-xl overflow-hidden transform hover:scale-[1.02] transition duration-500 ease-in-out border border-gray-100 hover:shadow-2xl">
+                    <div class="p-8">
+                        <div class="flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 text-indigo-600 mb-4 transition-all duration-500 group-hover:bg-indigo-600 group-hover:text-white">
+                            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 17H5a2 2 0 01-2-2V5c0-1.1.9-2 2-2h14a2 2 0 012 2v10a2 2 0 01-2 2h-3m-1 3v-3m1 3h3" />
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-3">Road Freight & Distribution</h3>
+                        <p class="text-base text-gray-500">
+                            Flexible and comprehensive ground transportation across the continent.
+                        </p>
+                        <a href="#" class="mt-4 inline-flex items-center text-indigo-600 font-medium hover:text-indigo-500 transition duration-300">
+                            Learn More
+                            <svg class="ml-2 w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section id="team" class="py-16 sm:py-24 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12 sm:mb-16">
+                <h2 class="text-base font-semibold tracking-wide text-indigo-600 uppercase">Our Leaders</h2>
+                <p class="mt-2 text-3xl font-extrabold text-gray-900 sm:text-4xl">
+                    The Driving Force Behind Your Cargo
+                </p>
+                <p class="mt-4 max-w-2xl text-xl text-gray-500 mx-auto">
+                    Meet the experienced team that ensures every delivery is handled with precision and care.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
+
+                <div class="team-member text-center p-6 rounded-xl transform hover:shadow-2xl hover:bg-gray-50 transition duration-500 ease-in-out">
+                    <div class="w-32 h-32 mx-auto rounded-full overflow-hidden mb-4 shadow-lg ring-4 ring-indigo-500 ring-opacity-50">
+                        <img class="object-cover w-full h-full" src="https://images.unsplash.com/photo-1573496359142-b8d87734b584?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wzNzY0Nzd8MHwxfHNlYXJjaHw0fHxsZWFkZXJzaGlwfGVufDB8MHx8fDE2NjQwNDg3ODN8MA&ixlib=rb-4.0.3&q=80&w=150" alt="Alex Johnson, CEO">
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900">Alex Johnson</h3>
+                    <p class="text-indigo-600 font-medium">Chief Executive Officer</p>
+                    <p class="mt-2 text-gray-500 text-sm">
+                        Visionary leadership ensuring strategic growth and client satisfaction.
+                    </p>
+                </div>
+
+                <div class="team-member text-center p-6 rounded-xl transform hover:shadow-2xl hover:bg-gray-50 transition duration-500 ease-in-out">
+                    <div class="w-32 h-32 mx-auto rounded-full overflow-hidden mb-4 shadow-lg ring-4 ring-indigo-500 ring-opacity-50">
+                        <img class="object-cover w-full h-full" src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wzNzY0Nzd8MHwxfHNlYXJjaHwzfHxwb3J0cmFpdHxlbnwwfDB8fHwxNjY0MDQ4Nzg0fDA&ixlib=rb-4.0.3&q=80&w=150" alt="Maria Garcia, COO">
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900">Maria Garcia</h3>
+                    <p class="text-indigo-600 font-medium">Chief Operating Officer</p>
+                    <p class="mt-2 text-gray-500 text-sm">
+                        Oversees all ground and air operations for peak efficiency.
+                    </p>
+                </div>
+
+                <div class="team-member text-center p-6 rounded-xl transform hover:shadow-2xl hover:bg-gray-50 transition duration-500 ease-in-out">
+                    <div class="w-32 h-32 mx-auto rounded-full overflow-hidden mb-4 shadow-lg ring-4 ring-indigo-500 ring-opacity-50">
+                        <img class="object-cover w-full h-full" src="https://images.unsplash.com/photo-1531427186611-ad02f65bdf1c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wzNzY0Nzd8MHwxfHNlYXJjaHw3fHxwcm9mZXNzaW9uYWx8ZW58MHwwfHx8MTY2NDA0ODc4NHww&ixlib=rb-4.0.3&q=80&w=150" alt="Kenji Tanaka, Logistics Director">
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900">Kenji Tanaka</h3>
+                    <p class="text-indigo-600 font-medium">Logistics Director</p>
+                    <p class="mt-2 text-gray-500 text-sm">
+                        Expert in supply chain management and international shipping compliance.
+                    </p>
+                </div>
+                
+                <div class="team-member text-center p-6 rounded-xl transform hover:shadow-2xl hover:bg-gray-50 transition duration-500 ease-in-out">
+                    <div class="w-32 h-32 mx-auto rounded-full overflow-hidden mb-4 shadow-lg ring-4 ring-indigo-500 ring-opacity-50">
+                        <img class="object-cover w-full h-full" src="https://images.unsplash.com/photo-1581444158913-90d11af28833?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wzNzY0Nzd8MHwxfHNlYXJjaHwxNXx8Y3VzdG9tZXIlMjBzZXJ2aWNlfGVufDB8MHx8fDE2NjQwNDg3ODR8MA&ixlib=rb-4.0.3&q=80&w=150" alt="Sarah Chen, Customer Service Manager">
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900">Sarah Chen</h3>
+                    <p class="text-indigo-600 font-medium">Customer Service Manager</p>
+                    <p class="mt-2 text-gray-500 text-sm">
+                        Dedicated to proactive communication and superior client support.
+                    </p>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-gray-800 py-8">
+        <div class="max-w-7xl mx-auto px-4 text-center text-gray-400">
+            &copy; 2025 LOGISPRO. All rights reserved.
+        </div>
+    </footer>
+    
+</body>
+</html>

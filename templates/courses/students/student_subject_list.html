@@ -1,0 +1,447 @@
+{% extends 'core/base_with_sidebar.html' %}
+{% load static %}
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-4 sm:py-8 px-3 sm:px-4">
+  <div class="max-w-7xl mx-auto">
+    
+    <!-- Header -->
+    <div class="text-center mb-6 sm:mb-8">
+      <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 flex items-center justify-center space-x-2 sm:space-x-3 mb-2 sm:mb-3">
+        <i class="fas fa-book-open text-indigo-600 text-xl sm:text-2xl lg:text-3xl"></i>
+        <span>Available Courses</span>
+      </h1>
+      <p class="text-gray-600 text-sm sm:text-lg px-2">Browse and enroll in courses taught by our expert facilitators</p>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="mb-6 sm:mb-8">
+      <form method="GET" action="{% url 'student_subject_list' %}" class="max-w-2xl mx-auto px-2">
+        <div class="relative">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <i class="fas fa-search text-gray-400 text-sm sm:text-base"></i>
+          </div>
+          <input type="text" 
+                 name="q" 
+                 value="{{ request.GET.q }}"
+                 placeholder="Search courses..." 
+                 class="block w-full pl-9 sm:pl-10 pr-24 sm:pr-28 py-3 sm:py-4 text-sm sm:text-base border border-gray-300 rounded-xl bg-white shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 placeholder-gray-500 transition-all duration-200">
+          <div class="absolute inset-y-0 right-0 flex items-center pr-2 sm:pr-3">
+            {% if request.GET.q %}
+            <a href="{% url 'student_subject_list' %}" 
+               class="text-gray-400 hover:text-gray-600 transition-colors duration-200 mr-1 sm:mr-2 p-1"
+               title="Clear search">
+              <i class="fas fa-times text-sm"></i>
+            </a>
+            {% endif %}
+            <button type="submit" 
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 sm:px-6 py-1.5 sm:py-2 text-sm sm:text-base rounded-lg font-semibold transition-colors duration-200 transform hover:scale-105">
+              Search
+            </button>
+          </div>
+        </div>
+        
+        <!-- Search Filters -->
+        <div class="flex flex-wrap gap-3 sm:gap-4 mt-3 sm:mt-4 justify-center">
+          <div class="flex items-center">
+            <input type="checkbox" 
+                   id="filter_available" 
+                   name="available" 
+                   value="true" 
+                   {% if request.GET.available %}checked{% endif %}
+                   class="h-3.5 w-3.5 sm:h-4 sm:w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+            <label for="filter_available" class="ml-1.5 sm:ml-2 text-xs sm:text-sm text-gray-700">Available courses</label>
+          </div>
+          
+          <div class="flex items-center">
+            <input type="checkbox" 
+                   id="filter_popular" 
+                   name="popular" 
+                   value="true" 
+                   {% if request.GET.popular %}checked{% endif %}
+                   class="h-3.5 w-3.5 sm:h-4 sm:w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+            <label for="filter_popular" class="ml-1.5 sm:ml-2 text-xs sm:text-sm text-gray-700">Most popular</label>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Search Results Info -->
+    {% if request.GET.q or request.GET.available or request.GET.popular %}
+    <div class="mb-4 sm:mb-6 text-center px-2">
+      <div class="inline-flex flex-col sm:flex-row items-center bg-white rounded-lg shadow-sm px-3 sm:px-4 py-2 border border-indigo-200 text-xs sm:text-sm">
+        <div class="flex items-center mb-1 sm:mb-0">
+          <i class="fas fa-filter text-indigo-600 mr-1 sm:mr-2 text-xs"></i>
+          <span class="text-gray-700">
+            {% if request.GET.q %}
+              Results for "<strong class="break-all">{{ request.GET.q }}</strong>"
+            {% endif %}
+            {% if request.GET.available %}
+              {% if request.GET.q %} • {% endif %}Available
+            {% endif %}
+            {% if request.GET.popular %}
+              {% if request.GET.q or request.GET.available %} • {% endif %}Popular
+            {% endif %}
+          </span>
+        </div>
+        <a href="{% url 'student_subject_list' %}" 
+           class="ml-0 sm:ml-3 text-indigo-600 hover:text-indigo-800 font-medium flex items-center text-xs sm:text-sm mt-1 sm:mt-0">
+          <i class="fas fa-times mr-1"></i>
+          Clear
+        </a>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if subjects %}
+    <!-- Results Count -->
+    <div class="mb-3 sm:mb-4 text-center px-2">
+      <p class="text-gray-600 text-sm sm:text-base">
+        Found <span class="font-semibold text-indigo-600">{{ subjects.paginator.count }}</span> 
+        course{{ subjects.paginator.count|pluralize }}
+        {% if request.GET.q %}matching your search{% endif %}
+      </p>
+    </div>
+
+    <!-- Mobile Cards View -->
+    <div class="block lg:hidden space-y-4 animate-fade-in">
+      {% for subject in subjects %}
+      <div class="bg-white rounded-xl shadow-lg p-4 border border-gray-100 hover:shadow-xl transition-all duration-300">
+        <!-- Course Header -->
+        <div class="flex items-start justify-between mb-3">
+          <div class="flex items-start space-x-3 flex-1">
+            <div class="flex-shrink-0 w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+              <i class="fas fa-book text-indigo-600"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="text-base font-semibold text-gray-900 mb-1 line-clamp-2">{{ subject.title }}</h3>
+              <p class="text-gray-600 text-xs line-clamp-2">{{ subject.description|default:"No description provided" }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Facilitator -->
+        <div class="flex items-center space-x-2 mb-3">
+          {% if subject.teacher.profile_picture %}
+            <img class="h-8 w-8 rounded-full object-cover border border-white shadow-sm" 
+                 src="{{ subject.teacher.profile_picture.url }}" 
+                 alt="{{ subject.teacher.get_display_name }}">
+          {% else %}
+            <div class="h-8 w-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-xs border border-white shadow-sm">
+              {{ subject.teacher.get_display_name|make_list|first|upper }}
+            </div>
+          {% endif %}
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-gray-900 truncate">
+              {{ subject.teacher.get_display_name }}
+            </p>
+            <p class="text-xs text-gray-500 truncate">
+              {{ subject.teacher.email }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Stats and Action -->
+        <div class="flex items-center justify-between pt-3 border-t border-gray-100">
+          <div class="flex items-center space-x-4 text-xs text-gray-600">
+            <div class="flex items-center space-x-1">
+              <i class="fas fa-users text-gray-400"></i>
+              <span>{{ subject.enrollments.count }} students</span>
+            </div>
+            <div class="flex items-center space-x-1">
+              <i class="fas fa-calendar text-gray-400"></i>
+              <span>{{ subject.created_at|date:"M d" }}</span>
+            </div>
+          </div>
+
+          <div class="flex-shrink-0">
+            {% if subject.id in enrolled_subjects %}
+              <div class="flex items-center space-x-1 text-green-600 text-sm">
+                <i class="fas fa-check-circle"></i>
+                <span class="font-semibold">Enrolled</span>
+              </div>
+            {% else %}
+              <a href="{% url 'enroll_subject' subject.id %}" 
+                 class="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold rounded-lg shadow-md transition-all duration-200 transform hover:scale-105 text-sm">
+                <i class="fas fa-plus mr-1"></i>
+                Enroll
+              </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Desktop Table View -->
+    <div class="hidden lg:block bg-white rounded-xl shadow-lg overflow-hidden animate-fade-in">
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gradient-to-r from-indigo-600 to-purple-600">
+            <tr>
+              <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">
+                Course Details
+              </th>
+              <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">
+                Facilitator
+              </th>
+              <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">
+                Enrollment
+              </th>
+              <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">
+                Created
+              </th>
+              <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">
+                Action
+              </th>
+            </tr>
+          </thead>
+          
+          <tbody class="bg-white divide-y divide-gray-200">
+            {% for subject in subjects %}
+            <tr class="hover:bg-gray-50 transition-colors duration-200">
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-start space-x-4">
+                  <div class="flex-shrink-0 w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-book text-indigo-600 text-lg"></i>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-1">{{ subject.title }}</h3>
+                    <p class="text-gray-600 text-sm line-clamp-2">{{ subject.description|default:"No description provided" }}</p>
+                  </div>
+                </div>
+              </td>
+
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center space-x-3">
+                  {% if subject.teacher.profile_picture %}
+                    <img class="h-10 w-10 rounded-full object-cover border-2 border-white shadow-sm" 
+                         src="{{ subject.teacher.profile_picture.url }}" 
+                         alt="{{ subject.teacher.get_display_name }}">
+                  {% else %}
+                    <div class="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm border-2 border-white shadow-sm">
+                      {{ subject.teacher.get_display_name|make_list|first|upper }}
+                    </div>
+                  {% endif %}
+                  
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 truncate">
+                      {{ subject.teacher.get_display_name }}
+                    </p>
+                    <p class="text-sm text-gray-500 truncate flex items-center space-x-1">
+                      <i class="fas fa-envelope text-gray-400 text-xs"></i>
+                      <span>{{ subject.teacher.email }}</span>
+                    </p>
+                  </div>
+                </div>
+              </td>
+
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center space-x-3">
+                  <div class="flex -space-x-2">
+                    {% with enrolled_students=subject.enrollments.all %}
+                      {% for enrollment in enrolled_students|slice:":4" %}
+                        {% if enrollment.student.profile_picture %}
+                          <img class="h-8 w-8 rounded-full border-2 border-white object-cover" 
+                               src="{{ enrollment.student.profile_picture.url }}" 
+                               alt="{{ enrollment.student.username }}">
+                        {% else %}
+                          <div class="h-8 w-8 rounded-full bg-gradient-to-r from-green-500 to-blue-500 flex items-center justify-center text-white font-semibold text-xs border-2 border-white">
+                            {{ enrollment.student.get_display_name|make_list|first|upper }}
+                          </div>
+                        {% endif %}
+                      {% empty %}
+                        <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs border-2 border-white">
+                          <i class="fas fa-users"></i>
+                        </div>
+                      {% endfor %}
+                      
+                      {% if subject.enrollments.count > 4 %}
+                        <div class="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-semibold text-xs border-2 border-white">
+                          +{{ subject.enrollments.count|add:"-4" }}
+                        </div>
+                      {% endif %}
+                    {% endwith %}
+                  </div>
+                  
+                  <div class="text-sm text-gray-600">
+                    <span class="font-semibold">{{ subject.enrollments.count }}</span>
+                    <span class="text-gray-500">students</span>
+                  </div>
+                </div>
+              </td>
+
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">
+                  <div class="font-medium">{{ subject.created_at|date:"M d, Y" }}</div>
+                  <div class="text-gray-500 text-xs">{{ subject.created_at|date:"g:i A" }}</div>
+                </div>
+              </td>
+
+              <td class="px-6 py-4 whitespace-nowrap">
+                {% if subject.id in enrolled_subjects %}
+                  <div class="flex items-center space-x-2 text-green-600">
+                    <i class="fas fa-check-circle text-lg"></i>
+                    <span class="font-semibold">Enrolled</span>
+                  </div>
+                {% else %}
+                  <a href="{% url 'enroll_subject' subject.id %}" 
+                     class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold rounded-lg shadow-md transition-all duration-200 transform hover:scale-105 hover:shadow-lg">
+                    <i class="fas fa-plus mr-2"></i>
+                    Enroll Now
+                  </a>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if subjects.paginator.num_pages > 1 %}
+    <div class="mt-4 sm:mt-6 flex justify-center">
+      <nav class="flex items-center space-x-1 sm:space-x-2">
+        {% if subjects.has_previous %}
+          <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.available %}available={{ request.GET.available }}&{% endif %}{% if request.GET.popular %}popular={{ request.GET.popular }}&{% endif %}page={{ subjects.previous_page_number }}" 
+             class="px-3 sm:px-4 py-1.5 sm:py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200 text-xs sm:text-sm">
+            <i class="fas fa-chevron-left mr-1 sm:mr-2 text-xs"></i>Prev
+          </a>
+        {% endif %}
+
+        <div class="flex space-x-1">
+          {% for num in subjects.paginator.page_range %}
+            {% if subjects.number == num %}
+              <span class="px-3 sm:px-4 py-1.5 sm:py-2 bg-indigo-600 text-white rounded-lg font-semibold text-xs sm:text-sm">{{ num }}</span>
+            {% else %}
+              <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.available %}available={{ request.GET.available }}&{% endif %}{% if request.GET.popular %}popular={{ request.GET.popular }}&{% endif %}page={{ num }}" 
+                 class="px-3 sm:px-4 py-1.5 sm:py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200 text-xs sm:text-sm">
+                {{ num }}
+              </a>
+            {% endif %}
+          {% endfor %}
+        </div>
+
+        {% if subjects.has_next %}
+          <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.available %}available={{ request.GET.available }}&{% endif %}{% if request.GET.popular %}popular={{ request.GET.popular }}&{% endif %}page={{ subjects.next_page_number }}" 
+             class="px-3 sm:px-4 py-1.5 sm:py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200 text-xs sm:text-sm">
+            Next<i class="fas fa-chevron-right ml-1 sm:ml-2 text-xs"></i>
+          </a>
+        {% endif %}
+      </nav>
+    </div>
+    {% endif %}
+
+    {% elif request.GET.q %}
+    <!-- Empty Search Results -->
+    <div class="bg-white rounded-xl shadow-lg p-6 sm:p-8 lg:p-12 text-center animate-fade-in mx-2">
+      <div class="max-w-md mx-auto">
+        <div class="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 mx-auto mb-4 sm:mb-6 bg-indigo-100 rounded-full flex items-center justify-center">
+          <i class="fas fa-search text-indigo-600 text-xl sm:text-2xl lg:text-3xl"></i>
+        </div>
+        <h3 class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 mb-2 sm:mb-3">No courses found</h3>
+        <p class="text-gray-600 text-sm sm:text-base mb-3 sm:mb-4">We couldn't find any courses matching "<strong>{{ request.GET.q }}</strong>"</p>
+        <p class="text-gray-500 text-xs sm:text-sm mb-4 sm:mb-6">Try adjusting your search terms or browse all available courses.</p>
+        <a href="{% url 'student_subject_list' %}" 
+           class="inline-flex items-center px-4 sm:px-6 py-2 sm:py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-md transition-colors duration-200 text-sm sm:text-base">
+          <i class="fas fa-book-open mr-2"></i>
+          Browse All Courses
+        </a>
+      </div>
+    </div>
+
+    {% else %}
+    <!-- Empty State (No courses at all) -->
+    <div class="bg-white rounded-xl shadow-lg p-6 sm:p-8 lg:p-12 text-center animate-fade-in mx-2">
+      <div class="max-w-md mx-auto">
+        <div class="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 mx-auto mb-4 sm:mb-6 bg-indigo-100 rounded-full flex items-center justify-center">
+          <i class="fas fa-book-open text-indigo-600 text-xl sm:text-2xl lg:text-3xl"></i>
+        </div>
+        <h3 class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 mb-2 sm:mb-3">No Courses Available</h3>
+        <p class="text-gray-600 text-sm sm:text-base mb-3 sm:mb-4">There are no courses available for enrollment at the moment.</p>
+        <p class="text-gray-500 text-xs sm:text-sm mb-4 sm:mb-6">Please check back later for new course offerings.</p>
+        <a href="{% url 'dashboard' %}" 
+           class="inline-flex items-center px-4 sm:px-6 py-2 sm:py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-md transition-colors duration-200 text-sm sm:text-base">
+          <i class="fas fa-arrow-left mr-2"></i>
+          Back to Dashboard
+        </a>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Info Card -->
+    <div class="mt-6 sm:mt-8 bg-white rounded-xl shadow-lg p-4 sm:p-6 border-l-4 border-indigo-500 mx-2">
+      <div class="flex items-start space-x-3 sm:space-x-4">
+        <div class="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+          <i class="fas fa-info-circle text-indigo-600 text-sm sm:text-base lg:text-lg"></i>
+        </div>
+        <div class="flex-1">
+          <h3 class="text-base sm:text-lg font-semibold text-gray-800 mb-1 sm:mb-2">How to Enroll</h3>
+          <p class="text-gray-600 text-sm sm:text-base">
+            Click "Enroll Now" to join any available course. Once enrolled, you'll have access to course materials and can start learning immediately. 
+          </p>
+          <p class="text-gray-500 text-xs sm:text-sm mt-2">
+            <i class="fas fa-lightbulb text-yellow-500 mr-1"></i>
+            <strong>Tip:</strong> Use the search bar to find specific courses by title, description, or facilitator name.
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<style>
+@keyframes fadeIn {
+  from {opacity: 0; transform: translateY(15px);}
+  to {opacity: 1; transform: translateY(0);}
+}
+.animate-fade-in { animation: fadeIn 0.6s ease-out; }
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Custom scrollbar for table */
+.overflow-x-auto::-webkit-scrollbar {
+  height: 6px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb {
+  background: #c7d2fe;
+  border-radius: 4px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb:hover {
+  background: #a5b4fc;
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  .max-w-7xl {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+}
+</style>
+
+<script>
+// Auto-focus search input when page loads
+document.addEventListener('DOMContentLoaded', function() {
+  const searchInput = document.querySelector('input[name="q"]');
+  if (searchInput) {
+    searchInput.focus();
+    // Move cursor to end of text
+    searchInput.setSelectionRange(searchInput.value.length, searchInput.value.length);
+  }
+});
+</script>
+{% endblock %}

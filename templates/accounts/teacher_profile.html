@@ -1,0 +1,691 @@
+{% extends "core/base_with_sidebar.html" %}
+{% load static %}
+{% block content %}
+<div class="w-full bg-gradient-to-r from-sky-600 to-cyan-500 py-10 px-8 text-white">
+    <div class="max-w-5xl mx-auto flex flex-col sm:flex-row sm:items-center gap-6">
+        <div class="relative">
+            <div class="w-28 h-28 rounded-full overflow-hidden border-4 border-white">
+                {% if teacher.profile_picture %}
+                    <img src="{{ teacher.profile_picture.url }}" alt="Profile" class="w-full h-full object-cover" />
+                {% else %}
+                    <img src="https://i.pravatar.cc/300" alt="Profile" class="w-full h-full object-cover" />
+                {% endif %}
+            </div>
+            <button type="button" onclick="document.getElementById('profile_picture').click()" 
+                    class="absolute bottom-0 right-0 bg-white text-sky-600 rounded-full p-1 shadow-lg hover:bg-gray-100 transition-colors edit-btn">
+                <i class="fa-solid fa-camera text-sm"></i>
+            </button>
+        </div>
+        <div>
+            <h1 class="text-3xl font-bold">{{ teacher.get_display_name|default:teacher.username  }}</h1>
+            <p class="text-lg opacity-90">
+                {% if teacher.profession %}{{ teacher.profession }}{% else %}Complete your profile to add a title{% endif %}
+            </p>
+            <div class="flex flex-wrap gap-4 mt-3 text-sm opacity-90">
+                <div class="flex items-center gap-1">
+                    <i class="fa-solid fa-envelope"></i> {{ teacher.email }}
+                </div>
+                <div class="flex items-center gap-1">
+                    <i class="fa-solid fa-user-clock"></i> Member since {{ teacher.date_joined|date:"M j, Y" }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form method="POST" enctype="multipart/form-data" id="profile-form">
+    {% csrf_token %}
+    
+    <!-- Hidden file input for profile picture -->
+    <input type="file" name="profile_picture" id="profile_picture" class="hidden" accept="image/*" onchange="this.form.submit()">
+    
+    <!-- Hidden fields for JSON data -->
+    <input type="hidden" name="education_entries" id="education_entries" value="{{ teacher.education|default:'[]' }}">
+    <input type="hidden" name="expertise_entries" id="expertise_entries" value="{{ teacher.expertise|default:'[]' }}">
+
+    <div class="max-w-5xl mx-auto px-8 -mt-6">
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
+            <div class="bg-white p-6 rounded-xl shadow">
+                <p class="text-3xl font-bold text-sky-600">{{ subjects_count }}</p>
+                <p class="text-sm mt-2 text-gray-600">Courses Created</p>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow">
+                <p class="text-3xl font-bold text-sky-600">{{ total_enrollments }}</p>
+                <p class="text-sm mt-2 text-gray-600">Students Taught</p>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow">
+                <p class="text-3xl font-bold text-sky-600">4.9</p>
+                <p class="text-sm mt-2 text-gray-600">Average Rating</p>
+            </div>
+        </div>
+
+        <!-- Contact Information Section -->
+        <section class="bg-white mt-8 p-6 rounded-xl shadow">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold flex items-center gap-2 text-gray-800">
+                    <i class="fa-solid fa-address-card text-sky-600"></i>
+                    Contact Information
+                </h2>
+                <button type="button" onclick="enableEdit('contact')" class="text-sky-600 hover:text-sky-700 text-sm font-medium flex items-center gap-1">
+                    <i class="fa-solid fa-pencil text-xs"></i>
+                    Edit
+                </button>
+            </div>
+            
+            <!-- Display Mode -->
+            <div id="contact-display" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Personal Details -->
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg">
+                            <i class="fa-solid fa-user text-sky-600 w-4"></i>
+                            <div class="min-w-0 flex-1">
+                                <p class="text-sm text-gray-500 truncate">First Name</p>
+                                <p class="font-medium text-gray-900 truncate">
+                                    {% if teacher.first_name %}{{ teacher.first_name }}{% else %}<span class="text-gray-400">Not set</span>{% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg">
+                            <i class="fa-solid fa-user text-sky-600 w-4"></i>
+                            <div class="min-w-0 flex-1">
+                                <p class="text-sm text-gray-500 truncate">Last Name</p>
+                                <p class="font-medium text-gray-900 truncate">
+                                    {% if teacher.last_name %}{{ teacher.last_name }}{% else %}<span class="text-gray-400">Not set</span>{% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg">
+                            <i class="fa-solid fa-briefcase text-sky-600 w-4"></i>
+                            <div class="min-w-0 flex-1">
+                                <p class="text-sm text-gray-500 truncate">Profession</p>
+                                <p class="font-medium text-gray-900 truncate">
+                                    {% if teacher.profession %}{{ teacher.profession }}{% else %}<span class="text-gray-400">Not set</span>{% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Contact Details -->
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg">
+                            <i class="fa-solid fa-phone text-sky-600 w-4"></i>
+                            <div class="min-w-0 flex-1">
+                                <p class="text-sm text-gray-500 truncate">Phone Number</p>
+                                <p class="font-medium text-gray-900 truncate">
+                                    {% if teacher.phone_number %}{{ teacher.phone_number }}{% else %}<span class="text-gray-400">Not set</span>{% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg">
+                            <i class="fa-solid fa-envelope text-sky-600 w-4"></i>
+                            <div class="min-w-0 flex-1">
+                                <p class="text-sm text-gray-500 truncate">Email</p>
+                                <p class="font-medium text-gray-900 truncate">{{ teacher.email }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Edit Mode -->
+            <div id="contact-edit" class="hidden space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Personal Information -->
+                    <div class="space-y-3">
+                        <div>
+                            <label for="id_first_name" class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                            {{ form.first_name }}
+                        </div>
+                        <div>
+                            <label for="id_last_name" class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                            {{ form.last_name }}
+                        </div>
+                        <div>
+                            <label for="id_profession" class="block text-sm font-medium text-gray-700 mb-1">Profession</label>
+                            {{ form.profession }}
+                        </div>
+                    </div>
+                    
+                    <!-- Contact Details -->
+                    <div class="space-y-3">
+                        <div>
+                            <label for="id_phone_number" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                            {{ form.phone_number }}
+                        </div>
+                        <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                            <p class="text-sm text-gray-900">{{ teacher.email }}</p>
+                            <p class="text-xs text-gray-500 mt-1">Email cannot be changed</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex gap-2 pt-3 border-t border-gray-200">
+                    <button type="button" onclick="saveEdit('contact')" class="bg-sky-600 text-white px-4 py-2 rounded-lg hover:bg-sky-700 transition-colors text-sm font-medium flex items-center gap-1">
+                        <i class="fa-solid fa-check text-xs"></i>
+                        Save
+                    </button>
+                    <button type="button" onclick="cancelEdit('contact')" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium flex items-center gap-1">
+                        <i class="fa-solid fa-times text-xs"></i>
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Me Section -->
+        <section class="bg-white mt-10 p-6 rounded-xl shadow">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-xl font-bold flex items-center gap-2">
+                    <i class="fa-solid fa-user"></i> About Me
+                </h2>
+                <button type="button" onclick="enableEdit('bio')" class="edit-btn text-sky-600 hover:text-sky-700">
+                    <i class="fa-solid fa-pencil"></i> Edit
+                </button>
+            </div>
+            
+            <div id="bio-display" class="text-gray-700 leading-relaxed">
+                {% if teacher.bio %}
+                    {{ teacher.bio|linebreaks }}
+                {% else %}
+                    <p class="text-gray-500 italic">Tell us about yourself, your teaching philosophy, and experience...</p>
+                {% endif %}
+            </div>
+            
+            <div id="bio-edit" class="hidden">
+                {{ form.bio }}
+                <div class="flex gap-2 mt-3">
+                    <button type="button" onclick="saveEdit('bio')" class="save-btn bg-sky-600 text-white px-4 py-2 rounded-md hover:bg-sky-700 transition-colors">
+                        Save
+                    </button>
+                    <button type="button" onclick="cancelEdit('bio')" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Areas of Expertise Section -->
+        <section class="bg-white mt-10 p-6 rounded-xl shadow">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold flex items-center gap-2">
+                    <i class="fa-solid fa-lightbulb"></i> Areas of Expertise
+                </h2>
+                <button type="button" onclick="enableEdit('expertise')" class="edit-btn text-sky-600 hover:text-sky-700">
+                    <i class="fa-solid fa-pencil"></i> Edit
+                </button>
+            </div>
+            
+            <div id="expertise-display" class="flex flex-wrap gap-3">
+                {% if teacher.expertise %}
+                    {% for skill in teacher.expertise %}
+                        <span class="px-3 py-1 bg-sky-100 text-sky-700 rounded-full text-sm">{{ skill }}</span>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-gray-500 italic">Add your areas of expertise...</p>
+                {% endif %}
+            </div>
+            
+            <div id="expertise-edit" class="hidden">
+                <div class="flex flex-wrap gap-2 mb-3" id="expertise-tags"></div>
+                <div class="flex gap-2">
+                    <input type="text" id="new-expertise" placeholder="Add an area of expertise" 
+                           class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500">
+                    <button type="button" onclick="addExpertise()" class="bg-sky-600 text-white px-4 py-2 rounded-md hover:bg-sky-700">
+                        Add
+                    </button>
+                </div>
+                <div class="flex gap-2 mt-3">
+                    <button type="button" onclick="saveEdit('expertise')" class="save-btn bg-sky-600 text-white px-4 py-2 rounded-md hover:bg-sky-700 transition-colors">
+                        Save
+                    </button>
+                    <button type="button" onclick="cancelEdit('expertise')" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Education Background Section -->
+        <section class="bg-white mt-10 p-6 rounded-xl shadow mb-10">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold flex items-center gap-2">
+                    <i class="fa-solid fa-graduation-cap"></i> Education Background
+                </h2>
+                <button type="button" onclick="enableEdit('education')" class="edit-btn text-sky-600 hover:text-sky-700">
+                    <i class="fa-solid fa-pencil"></i> Edit
+                </button>
+            </div>
+            
+            <div id="education-display" class="space-y-6">
+                {% if teacher.education %}
+                    {% for edu in teacher.education %}
+                        <div class="border-l-4 border-sky-600 pl-4">
+                            <h3 class="font-semibold text-lg">{{ edu.degree }}</h3>
+                            <p class="text-sm text-gray-600">{{ edu.school }} • {{ edu.year }}</p>
+                            {% if edu.description %}
+                                <p class="text-gray-700 text-sm mt-1">{{ edu.description }}</p>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-gray-500 italic">Add your education background...</p>
+                {% endif %}
+            </div>
+            
+            <div id="education-edit" class="hidden">
+                <div id="education-entries" class="space-y-4 mb-4"></div>
+                <button type="button" onclick="addEducationEntry()" class="bg-sky-600 text-white px-4 py-2 rounded-md hover:bg-sky-700 mb-3">
+                    <i class="fa-solid fa-plus"></i> Add Education
+                </button>
+                <div class="flex gap-2">
+                    <button type="button" onclick="saveEdit('education')" class="save-btn bg-sky-600 text-white px-4 py-2 rounded-md hover:bg-sky-700 transition-colors">
+                        Save
+                    </button>
+                    <button type="button" onclick="cancelEdit('education')" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Save Button (hidden by default) -->
+        <div class="fixed bottom-6 right-6 hidden" id="global-save">
+            <button type="submit" class="bg-green-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-green-700 transition-colors">
+                <i class="fa-solid fa-floppy-disk mr-2"></i>Save All Changes
+            </button>
+        </div>
+    </div>
+</form>
+
+<script>
+  let currentEdit = null;
+
+  function enableEdit(section) {
+      console.log('enableEdit called for:', section);
+      
+      // Hide all edit sections first
+      document.querySelectorAll('[id$="-edit"]').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('[id$="-display"]').forEach(el => el.classList.remove('hidden'));
+      
+      // Show current edit section
+      document.getElementById(`${section}-display`).classList.add('hidden');
+      document.getElementById(`${section}-edit`).classList.remove('hidden');
+      
+      currentEdit = section;
+      
+      // Initialize edit content
+      if (section === 'bio') {
+          document.getElementById('id_bio').value = `{{ teacher.bio|default:''|escapejs }}`;
+      } else if (section === 'expertise') {
+          initExpertiseEdit();
+      } else if (section === 'education') {
+          initEducationEdit();
+      }
+      
+      showGlobalSave();
+  }
+
+  function saveEdit(section) {
+      console.log('saveEdit called for:', section);
+      
+      // PRESERVE existing data for other sections before saving
+      preserveOtherSectionsData(section);
+      
+      // Save data to hidden fields first
+      if (section === 'expertise') {
+          if (!saveExpertise()) {
+              alert('Error saving expertise. Please check the data.');
+              return false;
+          }
+      } else if (section === 'education') {
+          if (!saveEducation()) {
+              // Don't submit if education save failed
+              return false;
+          }
+      }
+      
+      // Show what's being saved
+      const expertiseValue = document.getElementById('expertise_entries').value;
+      const educationValue = document.getElementById('education_entries').value;
+      console.log('Expertise to save:', expertiseValue);
+      console.log('Education to save:', educationValue);
+      
+      // Validate JSON before submitting
+      try {
+          if (expertiseValue && expertiseValue !== '[]') {
+              JSON.parse(expertiseValue);
+          }
+          if (educationValue && educationValue !== '[]') {
+              JSON.parse(educationValue);
+          }
+      } catch (e) {
+          console.error('Invalid JSON detected:', e);
+          console.log('Problematic educationValue:', educationValue);
+          alert('Error: Invalid data format. Please try again. Details: ' + e.message);
+          return false;
+      }
+      
+      // SUBMIT THE FORM
+      console.log('Submitting form...');
+      document.getElementById('profile-form').submit();
+      return true;
+  }
+
+  function preserveOtherSectionsData(currentSection) {
+      // For sections that aren't being edited, preserve their current data from the display
+      if (currentSection !== 'expertise') {
+          preserveExpertiseData();
+      }
+      if (currentSection !== 'education') {
+          preserveEducationData();
+      }
+  }
+
+  function preserveExpertiseData() {
+      try {
+          const expertiseContainer = document.getElementById('expertise-display');
+          const skills = [];
+          
+          // Extract skills from the display elements
+          expertiseContainer.querySelectorAll('span').forEach(span => {
+              const skill = span.textContent.trim();
+              if (skill && skill !== 'Add your areas of expertise...') {
+                  skills.push(skill);
+              }
+          });
+          
+          const expertiseJson = JSON.stringify(skills);
+          document.getElementById('expertise_entries').value = expertiseJson;
+          console.log('Preserved expertise data:', expertiseJson);
+      } catch (error) {
+          console.error('Error preserving expertise data:', error);
+      }
+  }
+
+  function preserveEducationData() {
+      try {
+          const educationContainer = document.getElementById('education-display');
+          const education = [];
+          
+          // Extract education from display elements
+          if (!educationContainer.querySelector('.text-gray-500')) { // If not empty message
+              educationContainer.querySelectorAll('.border-l-4').forEach(eduElement => {
+                  const degree = eduElement.querySelector('h3').textContent.trim();
+                  const schoolYear = eduElement.querySelector('p').textContent.trim();
+                  const [school, year] = schoolYear.split('•').map(s => s.trim());
+                  const descriptionElement = eduElement.querySelector('.text-gray-700');
+                  const description = descriptionElement ? descriptionElement.textContent.trim() : '';
+                  
+                  if (degree && school && year) {
+                      education.push({
+                          degree: degree,
+                          school: school,
+                          year: year,
+                          description: description
+                      });
+                  }
+              });
+          }
+          
+          const educationJson = JSON.stringify(education);
+          document.getElementById('education_entries').value = educationJson;
+          console.log('Preserved education data:', educationJson);
+      } catch (error) {
+          console.error('Error preserving education data:', error);
+      }
+  }
+
+  function cancelEdit(section) {
+      console.log('cancelEdit called for:', section);
+      document.getElementById(`${section}-display`).classList.remove('hidden');
+      document.getElementById(`${section}-edit`).classList.add('hidden');
+      
+      currentEdit = null;
+      checkGlobalSave();
+  }
+
+  function showGlobalSave() {
+      document.getElementById('global-save').classList.add('hidden'); // Hide global save for individual edits
+  }
+
+  function checkGlobalSave() {
+      const hasActiveEdit = document.querySelectorAll('[id$="-edit"]:not(.hidden)').length > 0;
+      if (!hasActiveEdit) {
+          document.getElementById('global-save').classList.add('hidden');
+      }
+  }
+
+  // Expertise Management
+  function initExpertiseEdit() {
+      try {
+          // Get expertise from display instead of template variable to avoid JSON issues
+          const expertiseContainer = document.getElementById('expertise-display');
+          const skills = [];
+          
+          // Extract skills from the display elements
+          expertiseContainer.querySelectorAll('span').forEach(span => {
+              const skill = span.textContent.trim();
+              if (skill && skill !== 'Add your areas of expertise...') {
+                  skills.push(skill);
+              }
+          });
+          
+          const container = document.getElementById('expertise-tags');
+          container.innerHTML = '';
+          
+          console.log('Initializing expertise:', skills);
+          
+          skills.forEach(skill => {
+              addExpertiseTag(skill, container);
+          });
+      } catch (error) {
+          console.error('Error initializing expertise:', error);
+          document.getElementById('expertise-tags').innerHTML = '';
+      }
+  }
+
+  function addExpertise() {
+      const input = document.getElementById('new-expertise');
+      const skill = input.value.trim();
+      if (skill) {
+          addExpertiseTag(skill, document.getElementById('expertise-tags'));
+          input.value = '';
+          input.focus();
+      }
+  }
+
+  function addExpertiseTag(skill, container) {
+      const tag = document.createElement('div');
+      tag.className = 'flex items-center gap-1 bg-sky-100 text-sky-700 px-3 py-1 rounded-full text-sm';
+      tag.innerHTML = `
+          <span class="skill-text">${skill.replace(/"/g, '&quot;')}</span>
+          <button type="button" onclick="this.parentElement.remove()" class="text-sky-700 hover:text-sky-900 ml-1">
+              <i class="fa-solid fa-times text-xs"></i>
+          </button>
+      `;
+      container.appendChild(tag);
+  }
+
+  function saveExpertise() {
+      try {
+          const tags = Array.from(document.getElementById('expertise-tags').children);
+          const expertise = tags.map(tag => {
+              return tag.querySelector('.skill-text').textContent.trim();
+          }).filter(skill => skill); // Remove empty skills
+          
+          console.log('Saving expertise:', expertise);
+          
+          const expertiseJson = JSON.stringify(expertise);
+          console.log('Expertise JSON:', expertiseJson);
+          document.getElementById('expertise_entries').value = expertiseJson;
+          return true;
+      } catch (error) {
+          console.error('Error saving expertise:', error);
+          return false;
+      }
+  }
+
+  // Education Management
+  function initEducationEdit() {
+      try {
+          // Get education from display instead of template variable to avoid JSON issues
+          const educationContainer = document.getElementById('education-display');
+          const education = [];
+          
+          // Extract education from display elements
+          if (!educationContainer.querySelector('.text-gray-500')) { // If not empty message
+              educationContainer.querySelectorAll('.border-l-4').forEach(eduElement => {
+                  const degree = eduElement.querySelector('h3').textContent.trim();
+                  const schoolYear = eduElement.querySelector('p').textContent.trim();
+                  const [school, year] = schoolYear.split('•').map(s => s.trim());
+                  const descriptionElement = eduElement.querySelector('.text-gray-700');
+                  const description = descriptionElement ? descriptionElement.textContent.trim() : '';
+                  
+                  if (degree && school && year) {
+                      education.push({
+                          degree: degree,
+                          school: school,
+                          year: year,
+                          description: description
+                      });
+                  }
+              });
+          }
+          
+          const container = document.getElementById('education-entries');
+          container.innerHTML = '';
+          
+          console.log('Initializing education:', education);
+          
+          if (education.length === 0) {
+              addEducationEntry();
+          } else {
+              education.forEach(edu => {
+                  addEducationEntry(edu);
+              });
+          }
+      } catch (error) {
+          console.error('Error initializing education:', error);
+          document.getElementById('education-entries').innerHTML = '';
+          addEducationEntry();
+      }
+  }
+
+  function addEducationEntry(edu = {}) {
+      const container = document.getElementById('education-entries');
+      const entry = document.createElement('div');
+      entry.className = 'border border-gray-300 rounded-lg p-4 mb-4';
+      
+      // Escape values to prevent JSON issues
+      const degree = (edu.degree || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      const school = (edu.school || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      const year = (edu.year || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      const description = (edu.description || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      
+      entry.innerHTML = `
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+              <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Degree *</label>
+                  <input type="text" class="edu-degree w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500" 
+                        value="${degree}" placeholder="e.g., Ph.D. in Mathematics" required>
+              </div>
+              <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Year *</label>
+                  <input type="text" class="edu-year w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500" 
+                        value="${year}" placeholder="e.g., 2008" required>
+              </div>
+          </div>
+          <div class="mb-3">
+              <label class="block text-sm font-medium text-gray-700 mb-1">School/University *</label>
+              <input type="text" class="edu-school w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500" 
+                    value="${school}" placeholder="e.g., Massachusetts Institute of Technology" required>
+          </div>
+          <div class="mb-3">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Description (Optional)</label>
+              <textarea class="edu-description w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500" 
+                        rows="2" placeholder="e.g., Specialized in Applied Mathematics and Computational Theory">${description}</textarea>
+          </div>
+          <div class="flex justify-between items-center">
+              <button type="button" class="remove-education-btn text-red-600 hover:text-red-700 text-sm flex items-center">
+                  <i class="fa-solid fa-trash mr-1"></i> Remove Entry
+              </button>
+              <span class="text-xs text-gray-500">* Required fields</span>
+          </div>
+      `;
+      
+      // Add event listener for the remove button
+      const removeBtn = entry.querySelector('.remove-education-btn');
+      removeBtn.addEventListener('click', function() {
+          entry.remove();
+      });
+      
+      container.appendChild(entry);
+  }
+
+  function saveEducation() {
+      try {
+          const entries = Array.from(document.getElementById('education-entries').children);
+          const education = entries.map(entry => {
+              const degree = entry.querySelector('.edu-degree').value.trim();
+              const school = entry.querySelector('.edu-school').value.trim();
+              const year = entry.querySelector('.edu-year').value.trim();
+              const description = entry.querySelector('.edu-description').value.trim();
+              
+              console.log('Processing entry:', { degree, school, year, description });
+              
+              return {
+                  degree: degree,
+                  school: school,
+                  year: year,
+                  description: description
+              };
+          }).filter(edu => {
+              // Only save complete entries
+              const isComplete = edu.degree && edu.school && edu.year;
+              console.log('Entry complete?', isComplete, edu);
+              return isComplete;
+          });
+          
+          console.log('Saving education entries:', education);
+          
+          const educationJson = JSON.stringify(education);
+          console.log('Education JSON to save:', educationJson);
+          
+          // Validate the JSON before setting it
+          JSON.parse(educationJson);
+          
+          document.getElementById('education_entries').value = educationJson;
+          return true;
+      } catch (error) {
+          console.error('Error saving education:', error);
+          alert('Error: ' + error.message);
+          return false;
+      }
+  }
+
+  // Handle Enter key in expertise input
+  document.addEventListener('DOMContentLoaded', function() {
+      const expertiseInput = document.getElementById('new-expertise');
+      if (expertiseInput) {
+          expertiseInput.addEventListener('keypress', function(e) {
+              if (e.key === 'Enter') {
+                  e.preventDefault();
+                  addExpertise();
+              }
+          });
+      }
+      
+      // Initialize hidden fields with current data from display
+      preserveExpertiseData();
+      preserveEducationData();
+      
+      console.log('Profile editing functions loaded successfully');
+      console.log('Initial expertise_entries:', document.getElementById('expertise_entries').value);
+      console.log('Initial education_entries:', document.getElementById('education_entries').value);
+  });
+</script>
+
+{% endblock %}

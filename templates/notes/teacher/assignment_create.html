@@ -1,0 +1,42 @@
+{% extends 'core/base_with_sidebar.html' %}
+{% block content %}
+<div class="max-w-3xl mx-auto p-6">
+
+    <h2 class="text-2xl font-bold mb-4">Create a New Assignment</h2>
+
+    <form method="POST" enctype="multipart/form-data" class="space-y-4 bg-white p-6 rounded shadow">
+        {% csrf_token %}
+
+        {{ form.non_field_errors }}
+
+        <div>
+            <label class="font-semibold">Subject</label>
+            {{ form.subject }}
+        </div>
+
+        <div>
+            <label class="font-semibold">Title</label>
+            {{ form.title }}
+        </div>
+
+        <div>
+            <label class="font-semibold">Description</label>
+            {{ form.description }}
+        </div>
+
+        <div>
+            <label class="font-semibold">Due Date</label>
+            {{ form.due_date }}
+        </div>
+
+        <div>
+            <label class="font-semibold">Attachment (optional)</label>
+            {{ form.attachment }}
+        </div>
+
+        <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+            Create Assignment
+        </button>
+    </form>
+</div>
+{% endblock %}

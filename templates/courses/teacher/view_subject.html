@@ -1,0 +1,652 @@
+{% extends 'core/base_with_sidebar.html' %}
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-sky-50 py-4 sm:py-6 px-3 sm:px-4">
+    <div class="max-w-6xl mx-auto">
+        
+        <!-- Subject Header -->
+        <div class="bg-gradient-to-r from-sky-500 to-blue-500 rounded-xl shadow-lg p-4 sm:p-6 mb-4 sm:mb-6 text-white">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 sm:gap-4">
+                <div class="flex-1 min-w-0">
+                    <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold mb-2 break-words">{{ subject.title }}</h1>
+                    <p class="text-sky-100 text-sm sm:text-lg mb-3 break-words">{{ subject.description }}</p>
+                    <div class="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm text-sky-200">
+                        <div class="flex items-center space-x-1">
+                            <i class="fas fa-calendar text-xs"></i>
+                            <span>Created: {{ subject.created_at|date:"M d, Y" }}</span>
+                        </div>
+                        <div class="flex items-center space-x-1">
+                            <i class="fas fa-users text-xs"></i>
+                            <span>{{ enrollments.paginator.count }} enrolled student{{ enrollments.paginator.count|pluralize }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex flex-col xs:flex-row gap-2 sm:gap-3 mt-4 lg:mt-0">
+                    <a href="{% url 'edit_subject' subject.id %}" 
+                       class="bg-white text-sky-600 hover:bg-sky-50 px-3 sm:px-4 py-2 rounded-lg font-semibold transition flex items-center justify-center space-x-2 text-sm sm:text-base">
+                        <i class="fas fa-edit"></i>
+                        <span class="whitespace-nowrap">Edit Subject</span>
+                    </a>
+                    <a href="{% url 'teacher_subjects' %}" 
+                       class="bg-sky-600 hover:bg-sky-700 text-white px-3 sm:px-4 py-2 rounded-lg font-semibold transition flex items-center justify-center space-x-2 text-sm sm:text-base">
+                        <i class="fas fa-arrow-left"></i>
+                        <span class="whitespace-nowrap">Back to Subjects</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+            <!-- Left Column - Students & Quick Stats -->
+            <div class="lg:col-span-1 space-y-4 sm:space-y-6">
+                <!-- Enrolled Students Card -->
+                <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-100">
+                    <h3 class="text-base sm:text-lg font-semibold text-gray-800 mb-3 sm:mb-4 flex items-center space-x-2">
+                        <i class="fas fa-users text-sky-500"></i>
+                        <span class="truncate">Enrolled Students</span>
+                        <span class="bg-sky-100 text-sky-800 text-xs px-2 py-1 rounded-full flex-shrink-0">{{ enrollments.paginator.count }}</span>
+                    </h3>
+                    
+                    {% if enrollments %}
+                    <div class="space-y-2 sm:space-y-3 max-h-80 overflow-y-auto">
+                        {% for enrollment in enrollments %}
+                        <div class="flex items-center justify-between p-2 sm:p-3 bg-gradient-to-r from-sky-50 to-white rounded-lg border border-sky-100">
+                            <div class="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
+                                <div class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-sky-500 to-blue-500 rounded-full flex items-center justify-center text-white font-semibold text-xs sm:text-sm flex-shrink-0">
+                                    {{ enrollment.student.get_display_name|make_list|first|upper }}
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <p class="text-xs sm:text-sm font-medium text-gray-800 truncate">{{ enrollment.student.get_display_name }}</p>
+                                    <p class="text-xs text-gray-500 truncate">{{ enrollment.student.email }}</p>
+                                </div>
+                            </div>
+                            <span class="text-xs text-sky-600 font-medium flex-shrink-0 ml-2">{{ enrollment.date_enrolled|date:"M d" }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Student Pagination -->
+                    {% if enrollments.paginator.num_pages > 1 %}
+                    <div class="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-200">
+                        <div class="flex flex-col xs:flex-row items-center justify-between gap-2">
+                            <div class="text-xs text-gray-600 whitespace-nowrap">
+                                Showing {{ enrollments.start_index }}-{{ enrollments.end_index }} of {{ enrollments.paginator.count }}
+                            </div>
+                            <div class="flex space-x-1">
+                                {% if enrollments.has_previous %}
+                                    <a href="?student_page={{ enrollments.previous_page_number }}{% if request.GET.assignment_page %}&assignment_page={{ request.GET.assignment_page }}{% endif %}" 
+                                       class="px-2 py-1 bg-white border border-gray-300 rounded text-gray-700 hover:bg-gray-50 transition-colors text-xs flex items-center">
+                                        <i class="fas fa-chevron-left mr-1 text-xs"></i>
+                                    </a>
+                                {% endif %}
+
+                                {% for num in enrollments.paginator.page_range %}
+                                    {% if num == enrollments.number %}
+                                        <span class="px-2 py-1 bg-sky-600 text-white rounded text-xs font-semibold">
+                                            {{ num }}
+                                        </span>
+                                    {% elif num >= enrollments.number|add:"-2" and num <= enrollments.number|add:"2" %}
+                                        <a href="?student_page={{ num }}{% if request.GET.assignment_page %}&assignment_page={{ request.GET.assignment_page }}{% endif %}" 
+                                           class="px-2 py-1 bg-white border border-gray-300 rounded text-gray-700 hover:bg-gray-50 transition-colors text-xs">
+                                            {{ num }}
+                                        </a>
+                                    {% endif %}
+                                {% endfor %}
+
+                                {% if enrollments.has_next %}
+                                    <a href="?student_page={{ enrollments.next_page_number }}{% if request.GET.assignment_page %}&assignment_page={{ request.GET.assignment_page }}{% endif %}" 
+                                       class="px-2 py-1 bg-white border border-gray-300 rounded text-gray-700 hover:bg-gray-50 transition-colors text-xs flex items-center">
+                                        <i class="fas fa-chevron-right ml-1 text-xs"></i>
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-user-slash text-gray-300 text-xl sm:text-2xl mb-2"></i>
+                        <p class="text-gray-500 text-sm">No students enrolled yet</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Quick Stats Card -->
+                <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-100">
+                    <h3 class="text-base sm:text-lg font-semibold text-gray-800 mb-3 sm:mb-4 flex items-center space-x-2">
+                        <i class="fas fa-chart-pie text-teal-500"></i>
+                        <span>Course Overview</span>
+                    </h3>
+                    <div class="space-y-3 sm:space-y-4">
+                        <div class="flex justify-between items-center p-2 sm:p-3 bg-gradient-to-r from-sky-50 to-blue-50 rounded-lg">
+                            <span class="text-xs sm:text-sm text-gray-700">Total Assignments</span>
+                            <span class="font-bold text-sky-600 text-sm sm:text-base">{{ total_assignments }}</span>
+                        </div>
+                        <div class="flex justify-between items-center p-2 sm:p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg">
+                            <span class="text-xs sm:text-sm text-gray-700">Active Assignments</span>
+                            <span class="font-bold text-green-600 text-sm sm:text-base">{{ assignments_with_submissions }}</span>
+                        </div>
+                        <div class="flex justify-between items-center p-2 sm:p-3 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg">
+                            <span class="text-xs sm:text-sm text-gray-700">Enrolled Students</span>
+                            <span class="font-bold text-purple-600 text-sm sm:text-base">{{ enrollments.paginator.count }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Assignments & Course Materials -->
+            <div class="lg:col-span-2 space-y-4 sm:space-y-6">
+                <!-- Course Materials Section -->
+                <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-100">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4">
+                        <h2 class="text-xl sm:text-2xl font-bold text-gray-800 flex items-center space-x-2">
+                            <i class="fas fa-book text-emerald-500"></i>
+                            <span>Course Materials</span>
+                            <span class="bg-emerald-100 text-emerald-800 text-xs px-2 py-1 rounded-full">{{ materials.count }}</span>
+                        </h2>
+                        <a href="{% url 'upload_material' %}?subject={{ subject.id }}"
+                        class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-3 sm:px-4 py-2 rounded-lg font-semibold transition flex items-center justify-center space-x-2 shadow-md text-sm sm:text-base w-full sm:w-auto">
+                            <i class="fas fa-plus"></i>
+                            <span>Add Material</span>
+                        </a>
+                    </div>
+                    
+                    {% if materials %}
+                    <!-- Scrollable Materials Container -->
+                    <div class="max-h-96 overflow-y-auto pr-2 -mr-2" id="materials-scroll-container">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4" id="materials-container">
+                            {% for material in materials %}
+                            <div class="p-3 sm:p-4 bg-gradient-to-r from-sky-50 to-blue-50 rounded-lg border border-sky-100 hover:shadow-md transition-all relative group" id="material-{{ material.id }}">
+                                
+                                <!-- Action Buttons - ALWAYS VISIBLE -->
+                                <div class="absolute top-2 right-2 flex space-x-1 opacity-100 transition-opacity">
+                                    <button onclick="openEditModal({{ material.id }})" 
+                                            class="text-sky-600 hover:text-sky-800 transition-colors p-1 rounded hover:bg-white bg-white bg-opacity-80 shadow-sm"
+                                            title="Edit">
+                                        <i class="fas fa-edit text-xs"></i>
+                                    </button>
+                                    <button onclick="openDeleteModal({{ material.id }})" 
+                                            class="text-red-600 hover:text-red-800 transition-colors p-1 rounded hover:bg-white bg-white bg-opacity-80 shadow-sm"
+                                            title="Delete">
+                                        <i class="fas fa-trash text-xs"></i>
+                                    </button>
+                                </div>
+
+                                <div class="flex items-start space-x-2 sm:space-x-3 pr-8"> <!-- Added pr-8 for button space -->
+                                    <!-- File Type Icon -->
+                                    <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0 
+                                        {% if material.file %}bg-blue-100 text-blue-600
+                                        {% elif material.video_url %}bg-red-100 text-red-600
+                                        {% else %}bg-emerald-100 text-emerald-600{% endif %}">
+                                        {% if material.file %}
+                                            <i class="fas fa-file-pdf text-sm sm:text-base"></i>
+                                        {% elif material.video_url %}
+                                            <i class="fas fa-video text-sm sm:text-base"></i>
+                                        {% else %}
+                                            <i class="fas fa-link text-sm sm:text-base"></i>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="flex-1 min-w-0">
+                                        <h4 class="font-semibold text-gray-800 text-sm mb-1 truncate">{{ material.title }}</h4>
+                                        <p class="text-xs text-gray-600 mb-2 line-clamp-2">{{ material.description|default:"No description" }}</p>
+                                        
+                                        <!-- File Info -->
+                                        <div class="flex items-center space-x-4 text-xs text-gray-500">
+                                            <span class="flex items-center space-x-1">
+                                                <i class="fas fa-calendar text-xs"></i>
+                                                <span>{{ material.created_at|date:"M d, Y" }}</span>
+                                            </span>
+                                            {% if material.file %}
+                                            <span class="flex items-center space-x-1">
+                                                <i class="fas fa-download text-xs"></i>
+                                                <span>{{ material.file.size|filesizeformat }}</span>
+                                            </span>
+                                            {% endif %}
+                                        </div>
+
+                                        <!-- Action Links -->
+                                        <div class="flex space-x-2 mt-2">
+                                            {% if material.file %}
+                                            <a href="{{ material.file.url }}" target="_blank"
+                                            class="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center space-x-1">
+                                                <i class="fas fa-download"></i>
+                                                <span>Download</span>
+                                            </a>
+                                            {% endif %}
+
+                                            {% if material.video_url %}
+                                            <a href="{{ material.video_url }}" target="_blank"
+                                            class="text-xs text-red-600 hover:text-red-700 font-medium flex items-center space-x-1">
+                                                <i class="fab fa-youtube"></i>
+                                                <span>Watch</span>
+                                            </a>
+                                            {% endif %}
+
+                                            {% if material.external_link %}
+                                            <a href="{{ material.external_link }}" target="_blank"
+                                            class="text-xs text-emerald-600 hover:text-emerald-700 font-medium flex items-center space-x-1">
+                                                <i class="fas fa-external-link-alt"></i>
+                                                <span>Open</span>
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <!-- Empty State -->
+                    <div class="text-center py-6 sm:py-8">
+                        <div class="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-book-open text-gray-400 text-lg sm:text-xl"></i>
+                        </div>
+                        <h3 class="text-base sm:text-lg font-semibold text-gray-700 mb-2">No Course Materials</h3>
+                        <p class="text-gray-500 text-sm sm:text-base mb-4">Add your first material to get started</p>
+                        <a href="{% url 'upload_material' %}?subject={{ subject.id }}"
+                        class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold transition inline-flex items-center justify-center space-x-2 shadow-md text-sm sm:text-base w-full sm:w-auto">
+                            <i class="fas fa-plus"></i>
+                            <span>Add First Material</span>
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Include SweetAlert2 -->
+                <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+                <script>
+                    // CSRF Token for AJAX requests
+                    function getCSRFToken() {
+                        let csrfToken = '';
+                        const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+                        if (csrfInput) {
+                            csrfToken = csrfInput.value;
+                        }
+                        if (!csrfToken) {
+                            const cookieValue = document.cookie
+                                .split('; ')
+                                .find(row => row.startsWith('csrftoken='))
+                                ?.split('=')[1];
+                            if (cookieValue) {
+                                csrfToken = cookieValue;
+                            }
+                        }
+                        return csrfToken;
+                    }
+
+                    // Edit Material Modal
+                    async function openEditModal(materialId) {
+                        try {
+                            console.log('Opening edit modal for material:', materialId);
+                            
+                            const response = await fetch(`/notes/edit/${materialId}/`, {
+                                headers: {
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                    'X-CSRFToken': getCSRFToken(),
+                                }
+                            });
+                            
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! status: ${response.status}`);
+                            }
+                            
+                            const data = await response.json();
+                            
+                            if (data.form_html) {
+                                Swal.fire({
+                                    title: 'Edit Material',
+                                    html: data.form_html,
+                                    showCancelButton: true,
+                                    confirmButtonText: 'Update Material',
+                                    cancelButtonText: 'Cancel',
+                                    confirmButtonColor: '#10b981',
+                                    cancelButtonColor: '#6b7280',
+                                    width: '600px',
+                                    preConfirm: async () => {
+                                        const form = document.getElementById('editMaterialForm');
+                                        const formData = new FormData(form);
+                                        
+                                        try {
+                                            const updateResponse = await fetch(`/notes/edit/${materialId}/`, {
+                                                method: 'POST',
+                                                body: formData,
+                                                headers: {
+                                                    'X-Requested-With': 'XMLHttpRequest',
+                                                    'X-CSRFToken': getCSRFToken(),
+                                                }
+                                            });
+                                            
+                                            if (!updateResponse.ok) {
+                                                throw new Error(`HTTP error! status: ${updateResponse.status}`);
+                                            }
+                                            
+                                            const updateData = await updateResponse.json();
+                                            
+                                            if (!updateData.success) {
+                                                let errorMessage = 'Please fix the following errors:\n';
+                                                for (const field in updateData.errors) {
+                                                    errorMessage += `• ${field}: ${updateData.errors[field].join(', ')}\n`;
+                                                }
+                                                Swal.showValidationMessage(errorMessage);
+                                                return false;
+                                            }
+                                            
+                                            return updateData;
+                                        } catch (error) {
+                                            Swal.showValidationMessage(`Request failed: ${error.message}`);
+                                            return false;
+                                        }
+                                    },
+                                    allowOutsideClick: () => !Swal.isLoading()
+                                }).then((result) => {
+                                    if (result.isConfirmed && result.value) {
+                                        Swal.fire({
+                                            title: 'Success!',
+                                            text: result.value.message,
+                                            icon: 'success',
+                                            confirmButtonColor: '#10b981'
+                                        }).then(() => {
+                                            location.reload();
+                                        });
+                                    }
+                                });
+                            } else if (data.error) {
+                                throw new Error(data.error);
+                            } else {
+                                throw new Error('No form HTML received');
+                            }
+                        } catch (error) {
+                            console.error('Error loading edit form:', error);
+                            Swal.fire({
+                                title: 'Error',
+                                text: `Failed to load edit form: ${error.message}`,
+                                icon: 'error',
+                                confirmButtonColor: '#10b981'
+                            });
+                        }
+                    }
+
+                    // Delete Material Modal
+                    async function openDeleteModal(materialId) {
+                        try {
+                            const response = await fetch(`/notes/delete/${materialId}/`, {
+                                headers: {
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                    'X-CSRFToken': getCSRFToken(),
+                                }
+                            });
+                            
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! status: ${response.status}`);
+                            }
+                            
+                            const data = await response.json();
+                            
+                            if (data.material) {
+                                const material = data.material;
+                                
+                                Swal.fire({
+                                    title: 'Delete Material?',
+                                    html: `
+                                        <div class="text-left">
+                                            <p class="font-semibold text-gray-800">${material.title}</p>
+                                            <p class="text-sm text-gray-600 mt-1">Subject: ${material.subject}</p>
+                                            <p class="text-sm text-gray-600">Uploaded: ${material.created_at}</p>
+                                            ${material.description ? `<p class="text-sm text-gray-500 mt-2">${material.description.substring(0, 100)}${material.description.length > 100 ? '...' : ''}</p>` : ''}
+                                        </div>
+                                        <p class="text-red-600 font-medium mt-4">This action cannot be undone!</p>
+                                    `,
+                                    icon: 'warning',
+                                    showCancelButton: true,
+                                    confirmButtonText: 'Yes, Delete It!',
+                                    cancelButtonText: 'Cancel',
+                                    confirmButtonColor: '#dc2626',
+                                    cancelButtonColor: '#6b7280',
+                                    width: '500px'
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        fetch(`/notes/delete/${materialId}/`, {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                                'X-Requested-With': 'XMLHttpRequest',
+                                                'X-CSRFToken': getCSRFToken(),
+                                            },
+                                            body: JSON.stringify({})
+                                        })
+                                        .then(response => {
+                                            if (!response.ok) {
+                                                throw new Error(`HTTP error! status: ${response.status}`);
+                                            }
+                                            return response.json();
+                                        })
+                                        .then(data => {
+                                            if (data.success) {
+                                                const materialElement = document.getElementById(`material-${materialId}`);
+                                                if (materialElement) {
+                                                    materialElement.style.opacity = '0';
+                                                    materialElement.style.transform = 'scale(0.8)';
+                                                    materialElement.style.transition = 'all 0.3s ease';
+                                                    setTimeout(() => {
+                                                        materialElement.remove();
+                                                        
+                                                        const materialsCount = document.querySelectorAll('#materials-container > div').length;
+                                                        const countBadge = document.querySelector('.bg-emerald-100');
+                                                        if (countBadge) {
+                                                            countBadge.textContent = materialsCount;
+                                                        }
+                                                        
+                                                        if (materialsCount === 0) {
+                                                            location.reload();
+                                                        }
+                                                    }, 300);
+                                                }
+                                                
+                                                Swal.fire({
+                                                    title: 'Deleted!',
+                                                    text: data.message,
+                                                    icon: 'success',
+                                                    confirmButtonColor: '#10b981'
+                                                });
+                                            } else {
+                                                throw new Error(data.error || 'Failed to delete material');
+                                            }
+                                        })
+                                        .catch(error => {
+                                            console.error('Delete error:', error);
+                                            Swal.fire({
+                                                title: 'Error',
+                                                text: `Failed to delete material: ${error.message}`,
+                                                icon: 'error',
+                                                confirmButtonColor: '#10b981'
+                                            });
+                                        });
+                                    }
+                                });
+                            } else if (data.error) {
+                                throw new Error(data.error);
+                            } else {
+                                throw new Error('No material information received');
+                            }
+                        } catch (error) {
+                            console.error('Error loading delete confirmation:', error);
+                            Swal.fire({
+                                title: 'Error',
+                                text: `Failed to load material information: ${error.message}`,
+                                icon: 'error',
+                                confirmButtonColor: '#10b981'
+                            });
+                        }
+                    }
+                </script>
+
+                <style>
+                    /* Scrollbar Styling */
+                    #materials-scroll-container {
+                        scrollbar-width: thin;
+                        scrollbar-color: #cbd5e1 #f1f5f9;
+                    }
+                    
+                    #materials-scroll-container::-webkit-scrollbar {
+                        width: 6px;
+                    }
+                    
+                    #materials-scroll-container::-webkit-scrollbar-track {
+                        background: #f1f5f9;
+                        border-radius: 3px;
+                    }
+                    
+                    #materials-scroll-container::-webkit-scrollbar-thumb {
+                        background: #cbd5e1;
+                        border-radius: 3px;
+                    }
+                    
+                    #materials-scroll-container::-webkit-scrollbar-thumb:hover {
+                        background: #94a3b8;
+                    }
+
+                    /* SweetAlert2 Custom Styling */
+                    .swal2-popup {
+                        font-family: 'Inter', sans-serif;
+                    }
+
+                    .swal2-input, .swal2-textarea, .swal2-select {
+                        border: 1px solid #d1d5db !important;
+                        border-radius: 0.375rem !important;
+                        box-shadow: none !important;
+                    }
+
+                    .swal2-input:focus, .swal2-textarea:focus, .swal2-select:focus {
+                        border-color: #10b981 !important;
+                        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
+                    }
+                </style>
+                <!--end of course material section-->
+                <!-- Assignments Header -->
+                <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-100">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                        <h2 class="text-xl sm:text-2xl font-bold text-gray-800 flex items-center space-x-2">
+                            <i class="fas fa-tasks text-sky-500"></i>
+                            <span>Course Assignments</span>
+                        </h2>
+                        <a href="{% url 'create_assignment' %}?subject={{ subject.id }}"
+                           class="bg-gradient-to-r from-sky-500 to-blue-500 hover:from-sky-600 hover:to-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg font-semibold transition flex items-center justify-center space-x-2 shadow-md text-sm sm:text-base w-full sm:w-auto">
+                            <i class="fas fa-plus"></i>
+                            <span>Create Assignment</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Assignments List -->
+                {% if assignments %}
+                <div class="space-y-3 sm:space-y-4">
+                    {% for assignment in assignments %}
+                    <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-200 hover:shadow-md transition-all duration-300 hover:border-sky-200">
+                        <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3 sm:gap-4">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-start space-x-2 sm:space-x-3 mb-3">
+                                    <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-sky-100 to-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <i class="fas fa-tasks text-sky-600 text-sm sm:text-base"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <h3 class="text-base sm:text-lg font-semibold text-gray-800 mb-1 break-words">{{ assignment.title }}</h3>
+                                        <p class="text-gray-600 text-xs sm:text-sm mb-2 line-clamp-2">{{ assignment.description|truncatewords:20 }}</p>
+                                        <div class="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-gray-500">
+                                            <div class="flex items-center space-x-1">
+                                                <i class="fas fa-clock"></i>
+                                                <span>Due: {{ assignment.due_date|date:"M d, Y H:i" }}</span>
+                                            </div>
+                                            <div class="flex items-center space-x-1">
+                                                <i class="fas fa-paperclip"></i>
+                                                <span>{{ assignment.submissions.count }} submission{{ assignment.submissions.count|pluralize }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex flex-col xs:flex-row gap-2 self-start">
+                                <a href="{% url 'assignment_submissions' assignment.id %}"
+                                   class="bg-gradient-to-r from-sky-500 to-blue-500 hover:from-sky-600 hover:to-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg font-semibold transition flex items-center justify-center space-x-2 text-xs sm:text-sm shadow-sm whitespace-nowrap">
+                                    <i class="fas fa-eye"></i>
+                                    <span>View Submissions</span>
+                                </a>
+                                {% if assignment.attachment %}
+                                <a href="{{ assignment.attachment.url }}" 
+                                   target="_blank"
+                                   class="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-3 sm:px-4 py-2 rounded-lg font-semibold transition flex items-center justify-center space-x-2 text-xs sm:text-sm shadow-sm whitespace-nowrap">
+                                    <i class="fas fa-download"></i>
+                                    <span>Files</span>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Assignment Pagination -->
+                {% if assignments.paginator.num_pages > 1 %}
+                <div class="mt-4 sm:mt-6 bg-white rounded-xl shadow-sm p-3 sm:p-4 border border-gray-200">
+                    <div class="flex flex-col xs:flex-row items-center justify-between gap-2">
+                        <div class="text-xs sm:text-sm text-gray-700 whitespace-nowrap">
+                            Page {{ assignments.number }} of {{ assignments.paginator.num_pages }}
+                        </div>
+                        <div class="flex flex-wrap justify-center gap-1 sm:gap-2">
+                            {% if assignments.has_previous %}
+                                <a href="?assignment_page={{ assignments.previous_page_number }}{% if request.GET.student_page %}&student_page={{ request.GET.student_page }}{% endif %}" 
+                                   class="px-2 sm:px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-xs sm:text-sm flex items-center">
+                                    <i class="fas fa-chevron-left mr-1 text-xs"></i>
+                                    <span class="hidden xs:inline">Previous</span>
+                                </a>
+                            {% endif %}
+
+                            <div class="flex space-x-1">
+                                {% for num in assignments.paginator.page_range %}
+                                    {% if num == assignments.number %}
+                                        <span class="px-2 sm:px-3 py-2 bg-gradient-to-r from-sky-600 to-blue-600 text-white rounded-lg text-xs sm:text-sm font-semibold">
+                                            {{ num }}
+                                        </span>
+                                    {% elif num >= assignments.number|add:"-2" and num <= assignments.number|add:"2" %}
+                                        <a href="?assignment_page={{ num }}{% if request.GET.student_page %}&student_page={{ request.GET.student_page }}{% endif %}" 
+                                           class="px-2 sm:px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-xs sm:text-sm">
+                                            {{ num }}
+                                        </a>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+
+                            {% if assignments.has_next %}
+                                <a href="?assignment_page={{ assignments.next_page_number }}{% if request.GET.student_page %}&student_page={{ request.GET.student_page }}{% endif %}" 
+                                   class="px-2 sm:px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-xs sm:text-sm flex items-center">
+                                    <span class="hidden xs:inline">Next</span>
+                                    <i class="fas fa-chevron-right ml-1 text-xs"></i>
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% else %}
+                <!-- Empty Assignments State -->
+                <div class="bg-white rounded-xl shadow-md p-6 sm:p-8 lg:p-12 text-center border border-gray-200">
+                    <div class="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-3 sm:mb-4 bg-gradient-to-br from-gray-100 to-sky-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-tasks text-gray-400 text-xl sm:text-2xl"></i>
+                    </div>
+                    <h3 class="text-base sm:text-lg font-semibold text-gray-700 mb-2">No Assignments Yet</h3>
+                    <p class="text-gray-500 text-sm sm:text-base mb-4">Create your first assignment to get started</p>
+                    <a href="{% url 'create_assignment' %}?subject={{ subject.id }}"
+                       class="bg-gradient-to-r from-sky-500 to-blue-500 hover:from-sky-600 hover:to-blue-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold transition inline-flex items-center justify-center space-x-2 shadow-md text-sm sm:text-base w-full sm:w-auto">
+                        <i class="fas fa-plus"></i>
+                        <span>Create First Assignment</span>
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

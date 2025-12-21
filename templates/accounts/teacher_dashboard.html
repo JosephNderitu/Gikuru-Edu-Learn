@@ -1,0 +1,286 @@
+{% extends 'core/base_with_sidebar.html' %}
+{% load static %}
+{% block content %}
+
+<div class="min-h-screen bg-gray-50 p-3 sm:p-4 md:p-6">
+  
+  <!-- Header -->
+  <div class="flex flex-col xs:flex-row xs:justify-between xs:items-center gap-3 pb-4 border-b">
+    <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 flex items-center space-x-2">
+      <i class="fas fa-chalkboard-teacher text-indigo-600 text-lg sm:text-xl"></i>
+      <span>Teacher Dashboard</span>
+    </h1>
+  </div>
+
+  <!-- Welcome -->
+  <div class="text-center mt-4 sm:mt-6">
+    <h2 class="text-base sm:text-xl md:text-2xl font-semibold text-gray-700">
+      Welcome, <span class="text-indigo-700 font-bold">{{ user.role|title }} {{ user.username }}</span> 👋
+    </h2>
+  </div>
+
+  <!-- Quick Stats - Stack on mobile, grid on larger -->
+  <div class="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 mt-6 sm:mt-8">
+    <div class="bg-gradient-to-br from-indigo-600 to-indigo-800 text-white p-4 sm:p-6 rounded-xl shadow-md flex items-center space-x-3 sm:space-x-4">
+      <i class="fas fa-book text-xl sm:text-2xl md:text-3xl"></i>
+      <div>
+        <p class="text-xs sm:text-sm opacity-80">Total Subjects</p>
+        <p class="text-lg sm:text-xl md:text-2xl font-bold">{{ user.subjects.count }}</p>
+      </div>
+    </div>
+    <div class="bg-gradient-to-br from-purple-600 to-purple-800 text-white p-4 sm:p-6 rounded-xl shadow-md flex items-center space-x-3 sm:space-x-4">
+      <i class="fas fa-users text-xl sm:text-2xl md:text-3xl"></i>
+      <div>
+        <p class="text-xs sm:text-sm opacity-80">Total Enrollments</p>
+        <p class="text-lg sm:text-xl md:text-2xl font-bold">{{ total_enrollments }}</p>
+      </div>
+    </div>
+    <div class="bg-gradient-to-br from-green-600 to-green-800 text-white p-4 sm:p-6 rounded-xl shadow-md flex items-center space-x-3 sm:space-x-4">
+      <i class="fas fa-plus-circle text-xl sm:text-2xl md:text-3xl"></i>
+      <div>
+        <p class="text-xs sm:text-sm opacity-80">New Course</p>
+        <a href="{% url 'add_subject' %}" class="text-white font-semibold underline hover:text-gray-200 text-sm sm:text-base">Create</a>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Manage Subjects Section -->
+  <div class="mt-8 sm:mt-10">
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4 sm:mb-6">
+      <h3 class="text-lg sm:text-xl md:text-2xl font-semibold text-gray-700 flex items-center space-x-2">
+        <i class="fas fa-list text-indigo-600"></i>
+        <span>Your Subjects</span>
+      </h3>
+      <a href="{% url 'add_subject' %}"
+        class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 sm:px-5 py-2 rounded-lg shadow-md transition w-full sm:w-auto text-center text-sm sm:text-base">
+        <i class="fas fa-plus mr-1 sm:mr-2"></i> Add Subject
+      </a>
+    </div>
+
+    {% if subjects %}
+    <!-- Mobile Cards View for small screens -->
+    <div class="block sm:hidden space-y-4">
+      {% for subject in subjects %}
+      <div class="bg-white rounded-xl shadow p-4 border border-gray-200">
+        <div class="flex justify-between items-start mb-3">
+          <div class="flex-1">
+            <h4 class="font-semibold text-gray-800 text-base mb-1">{{ subject.title }}</h4>
+            <p class="text-gray-600 text-sm mb-2">{{ subject.description|truncatewords:10 }}</p>
+          </div>
+          <div class="text-right">
+            <span class="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2 py-1 rounded-full">
+              {{ subject.enrollments.count }} students
+            </span>
+          </div>
+        </div>
+        
+        <div class="flex justify-between items-center text-sm text-gray-500 mb-3">
+          <span>{{ subject.created_at|date:"M d, Y" }}</span>
+          <div class="flex space-x-3">
+            <a href="{% url 'view_subject' subject.id %}" class="text-blue-600 hover:text-blue-800" title="View">
+              <i class="fas fa-eye"></i>
+            </a>
+            <a href="{% url 'edit_subject' subject.id %}" class="text-green-600 hover:text-green-800" title="Edit">
+              <i class="fas fa-edit"></i>
+            </a>
+            <button onclick="openDeleteModal({{ subject.id }})" class="text-red-600 hover:text-red-800" title="Delete">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Desktop Table View for larger screens -->
+    <div class="hidden sm:block overflow-x-auto bg-white shadow rounded-xl">
+      <table class="min-w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-gray-100 text-gray-600 uppercase text-xs sm:text-sm leading-normal">
+            <th class="py-3 px-4 sm:px-6">Subject</th>
+            <th class="py-3 px-4 sm:px-6">Description</th>
+            <th class="py-3 px-4 sm:px-6 text-center">Enrolled</th>
+            <th class="py-3 px-4 sm:px-6 text-center">Date Created</th>
+            <th class="py-3 px-4 sm:px-6 text-center">Actions</th>
+          </tr>
+        </thead>
+
+        <tbody class="text-gray-700 text-xs sm:text-sm">
+          {% for subject in subjects %}
+          <tr class="border-b hover:bg-gray-50 transition">
+            <td class="py-4 px-4 sm:px-6 font-medium">
+              {{ subject.title }}
+            </td>
+
+            <td class="py-4 px-4 sm:px-6">
+              {{ subject.description|truncatewords:15 }}
+            </td>
+
+            <td class="py-4 px-4 sm:px-6 text-center font-semibold">
+              {{ subject.enrollments.count }}
+            </td>
+
+            <td class="py-4 px-4 sm:px-6 text-center">
+              {{ subject.created_at|date:"M d, Y" }}
+            </td>
+
+            <td class="py-4 px-4 sm:px-6 text-center">
+              <div class="flex justify-center space-x-2 sm:space-x-3">
+                <a href="{% url 'view_subject' subject.id %}" class="text-blue-600 hover:text-blue-800" title="View">
+                  <i class="fas fa-eye text-sm sm:text-lg"></i>
+                </a>
+                <a href="{% url 'edit_subject' subject.id %}" class="text-green-600 hover:text-green-800" title="Edit">
+                  <i class="fas fa-edit text-sm sm:text-lg"></i>
+                </a>
+                <button onclick="openDeleteModal({{ subject.id }})" class="text-red-600 hover:text-red-800" title="Delete">
+                  <i class="fas fa-trash text-sm sm:text-lg"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if subjects.paginator.num_pages > 1 %}
+    <div class="mt-4 sm:mt-6 flex justify-center">
+      <div class="flex flex-wrap justify-center gap-1 sm:gap-2">
+        <!-- Previous Button -->
+        {% if subjects.has_previous %}
+        <a href="?page={{ subjects.previous_page_number }}" 
+           class="px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-xs sm:text-sm flex items-center">
+          <i class="fas fa-chevron-left mr-1 text-xs"></i>
+          <span class="hidden xs:inline">Previous</span>
+        </a>
+        {% else %}
+        <span class="px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-400 text-xs sm:text-sm flex items-center">
+          <i class="fas fa-chevron-left mr-1 text-xs"></i>
+          <span class="hidden xs:inline">Previous</span>
+        </span>
+        {% endif %}
+
+        <!-- Page Numbers - Show limited numbers on mobile -->
+        {% for num in subjects.paginator.page_range %}
+          {% if subjects.number == num %}
+          <span class="px-3 py-2 bg-indigo-600 text-white rounded-lg text-xs sm:text-sm font-semibold">
+            {{ num }}
+          </span>
+          {% elif num >= subjects.number|add:"-2" and num <= subjects.number|add:"2" %}
+          <a href="?page={{ num }}" 
+             class="px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-xs sm:text-sm">
+            {{ num }}
+          </a>
+          {% endif %}
+        {% endfor %}
+
+        <!-- Next Button -->
+        {% if subjects.has_next %}
+        <a href="?page={{ subjects.next_page_number }}" 
+           class="px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-xs sm:text-sm flex items-center">
+          <span class="hidden xs:inline">Next</span>
+          <i class="fas fa-chevron-right ml-1 text-xs"></i>
+        </a>
+        {% else %}
+        <span class="px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-400 text-xs sm:text-sm flex items-center">
+          <span class="hidden xs:inline">Next</span>
+          <i class="fas fa-chevron-right ml-1 text-xs"></i>
+        </span>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+    {% else %}
+    <!-- No Subjects Message -->
+    <div class="text-center py-8 bg-white rounded-xl shadow p-4">
+      <i class="fas fa-info-circle text-indigo-500 text-3xl sm:text-4xl mb-3"></i>
+      <p class="text-gray-600 text-base sm:text-lg font-medium">
+        You haven't created any subjects yet.
+      </p>
+      <p class="text-gray-500 text-sm sm:text-base mt-1 mb-4">
+        Click the button below to add your first subject.
+      </p>
+      <a href="{% url 'add_subject' %}"
+        class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-md transition w-full sm:w-auto inline-block text-sm sm:text-base">
+        <i class="fas fa-plus mr-1 sm:mr-2"></i> Add Subject
+      </a>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+
+<!-- SweetAlert2 for delete confirmation -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  function openDeleteModal(subjectId) {
+    Swal.fire({
+      title: 'Delete Subject?',
+      text: "This action cannot be undone!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, delete it!',
+      cancelButtonText: 'Cancel',
+      customClass: {
+        popup: 'text-sm sm:text-base'
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/courses/teacher/delete/${subjectId}/`;
+        
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = csrfToken;
+        form.appendChild(csrfInput);
+        
+        document.body.appendChild(form);
+        form.submit();
+      }
+    });
+  }
+</script>
+
+<style>
+  @keyframes fadeIn {
+    from {opacity: 0; transform: translateY(15px);}
+    to {opacity: 1; transform: translateY(0);}
+  }
+  .animate-fade-in {animation: fadeIn 0.6s ease-out;}
+
+  /* Custom breakpoints */
+  @media (max-width: 475px) {
+    .xs\:grid-cols-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+  }
+
+  /* Better table responsiveness */
+  @media (max-width: 640px) {
+    .overflow-x-auto {
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+    }
+  }
+
+  /* Better mobile text sizes */
+  @media (max-width: 320px) {
+    h1 {
+      font-size: 1.125rem !important;
+    }
+    h2, h3 {
+      font-size: 1rem !important;
+    }
+    .text-xs {
+      font-size: 0.65rem !important;
+    }
+  }
+</style>
+
+{% endblock %}

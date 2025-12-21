@@ -1,0 +1,389 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartLearn PWA - Dashboard</title>
+    <!--<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">-->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <!-- Flatpickr CSS & JS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <!-- Flatpickr Confirm Plugin -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/confirmDate/confirmDate.min.js"></script>
+
+    <link rel="stylesheet" href="{% static 'css/cursor.css' %}">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif'],
+                    },
+                    width: {
+                        'sidebar-collapsed': '70px',
+                        'sidebar-expanded': '260px',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 font-inter">
+    <!-- Custom Cursor Elements -->
+    <div class="cursor-dot"></div>
+    <div class="cursor-dot-outline"></div>
+
+    <!-- Main Layout -->
+    <div class="flex h-screen">
+        <!-- Collapsible Sidebar -->
+        <div id="sidebar" class="bg-white shadow-lg z-30 flex flex-col h-full fixed transform -translate-x-full lg:translate-x-0 transition-all duration-300 sidebar-collapsed lg:w-sidebar-collapsed hover:lg:w-sidebar-expanded group">
+            <!-- Logo -->
+            <div class="p-4 border-b border-gray-200 flex items-center justify-center lg:justify-start group-hover:lg:justify-start">
+                <a href="/" class="flex items-center space-x-3">
+                    <img src="{% static "home/logo.jpg" %}" alt="logo" class="w-8 group-hover:lg:w-32 transition-all duration-300" />
+                </a>
+            </div>
+
+            <!-- User Profile -->
+            <div class="p-4 border-b border-gray-200">
+                <div class="flex items-center justify-center lg:justify-start space-x-0 group-hover:lg:space-x-3 transition-all duration-300">
+                    <!-- Profile Picture - Always centered in collapsed, aligned left in expanded -->
+                    <div class="flex-shrink-0">
+                        {% if user.profile_picture %}
+                            <img src="{{ user.profile_picture.url }}" 
+                                alt="{{ user.username }}" 
+                                class="w-10 h-10 lg:w-12 lg:h-12 rounded-full object-cover border-2 border-white shadow-sm">
+                        {% else %}
+                            <div class="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm lg:text-base">
+                                {{ user.username|make_list|first|upper }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- User Info - Hidden in collapsed, shown on hover expand -->
+                    <div class="hidden group-hover:lg:block transition-all duration-300 ml-0 group-hover:lg:ml-0">
+                        <h3 class="font-semibold text-gray-800 text-sm whitespace-nowrap">{{ user.get_display_name }}</h3>
+                        <p class="text-gray-500 text-xs capitalize">{{ user.role }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Menu -->
+            <nav class="flex-1 p-2 lg:p-4 overflow-y-auto">
+                <ul class="space-y-1 lg:space-y-2">
+                    <!-- Dashboard -->
+                    <li>
+                        <a href="{% url 'dashboard' %}" 
+                           class="nav-link flex items-center justify-center lg:justify-start space-x-0 lg:space-x-0 group-hover:lg:space-x-3 px-2 lg:px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-all duration-200 group {% if request.resolver_match.url_name == 'dashboard' %}bg-blue-50 text-blue-600 border-r-2 border-blue-600{% endif %}">
+                            <i class="fas fa-tachometer-alt w-5 text-center {% if request.resolver_match.url_name == 'dashboard' %}text-blue-600{% else %}text-gray-400 group-hover:text-blue-600{% endif %}"></i>
+                            <span class="hidden group-hover:lg:block transition-all duration-300">Dashboard</span>
+                        </a>
+                    </li>
+
+                    <!-- Profile -->
+                    <li>
+                        <a href="{% if user.role == 'teacher' %}{% url 'teacher_profile' %}{% else %}{% url 'student_profile' %}{% endif %}" 
+                           class="nav-link flex items-center justify-center lg:justify-start space-x-0 lg:space-x-0 group-hover:lg:space-x-3 px-2 lg:px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-all duration-200 group {% if request.resolver_match.url_name in 'teacher_profile,student_profile' %}bg-blue-50 text-blue-600 border-r-2 border-blue-600{% endif %}">
+                            <i class="fas fa-user w-5 text-center {% if request.resolver_match.url_name in 'teacher_profile,student_profile' %}text-blue-600{% else %}text-gray-400 group-hover:text-blue-600{% endif %}"></i>
+                            <span class="hidden group-hover:lg:block transition-all duration-300">My Profile</span>
+                        </a>
+                    </li>
+
+                    <!-- Courses -->
+                    <li>
+                        <a href="{% if user.role == 'teacher' %}{% url 'teacher_subjects' %}{% else %}{% url 'student_subject_list' %}{% endif %}" 
+                           class="nav-link flex items-center justify-center lg:justify-start space-x-0 lg:space-x-0 group-hover:lg:space-x-3 px-2 lg:px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-all duration-200 group {% if request.resolver_match.url_name in 'teacher_subjects,student_subject_list' %}bg-blue-50 text-blue-600 border-r-2 border-blue-600{% endif %}">
+                            <i class="fas fa-book w-5 text-center {% if request.resolver_match.url_name in 'teacher_subjects,student_subject_list' %}text-blue-600{% else %}text-gray-400 group-hover:text-blue-600{% endif %}"></i>
+                            <span class="hidden group-hover:lg:block transition-all duration-300">
+                                {% if user.role == 'teacher' %}My Courses{% else %}Browse Courses{% endif %}
+                            </span>
+                        </a>
+                    </li>
+
+                    <!-- Teacher Only Links -->
+                    {% if user.role == 'teacher' %}
+                    <li>
+                        <a href="{% url 'add_subject' %}" 
+                           class="nav-link flex items-center justify-center lg:justify-start space-x-0 lg:space-x-0 group-hover:lg:space-x-3 px-2 lg:px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-all duration-200 group {% if request.resolver_match.url_name == 'add_subject' %}bg-blue-50 text-blue-600 border-r-2 border-blue-600{% endif %}">
+                            <i class="fas fa-plus-circle w-5 text-center {% if request.resolver_match.url_name == 'add_subject' %}text-blue-600{% else %}text-gray-400 group-hover:text-blue-600{% endif %}"></i>
+                            <span class="hidden group-hover:lg:block transition-all duration-300">Add Course</span>
+                        </a>
+                    </li>
+                    
+                    <!-- Teacher Subject Management -->
+                    <li>
+                        <a href="{% url 'teacher_subjects' %}" 
+                           class="nav-link flex items-center justify-center lg:justify-start space-x-0 lg:space-x-0 group-hover:lg:space-x-3 px-2 lg:px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-all duration-200 group {% if request.resolver_match.url_name in 'view_subject,edit_subject,delete_subject' %}bg-blue-50 text-blue-600 border-r-2 border-blue-600{% endif %}">
+                            <i class="fas fa-cogs w-5 text-center {% if request.resolver_match.url_name in 'view_subject,edit_subject,delete_subject' %}text-blue-600{% else %}text-gray-400 group-hover:text-blue-600{% endif %}"></i>
+                            <span class="hidden group-hover:lg:block transition-all duration-300">Manage Courses</span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <!-- Student Only Links -->
+                    {% if user.role == 'student' %}
+                    <li>
+                        <a href="{% url 'student_subject_list' %}" 
+                           class="nav-link flex items-center justify-center lg:justify-start space-x-0 lg:space-x-0 group-hover:lg:space-x-3 px-2 lg:px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-all duration-200 group {% if request.resolver_match.url_name in 'enroll_subject,unenroll_subject,view_subject_student' %}bg-blue-50 text-blue-600 border-r-2 border-blue-600{% endif %}">
+                            <i class="fas fa-search w-5 text-center {% if request.resolver_match.url_name in 'enroll_subject,unenroll_subject,view_subject_student' %}text-blue-600{% else %}text-gray-400 group-hover:text-blue-600{% endif %}"></i>
+                            <span class="hidden group-hover:lg:block transition-all duration-300">Find Courses</span>
+                        </a>
+                    </li>
+                    
+                    <!-- Student Enrolled Courses -->
+                    <li>
+                        <a href="{% url 'dashboard' %}" 
+                           class="nav-link flex items-center justify-center lg:justify-start space-x-0 lg:space-x-0 group-hover:lg:space-x-3 px-2 lg:px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-all duration-200 group">
+                            <i class="fas fa-graduation-cap w-5 text-center text-gray-400 group-hover:text-blue-600"></i>
+                            <span class="hidden group-hover:lg:block transition-all duration-300">My Enrollments</span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <!-- Settings -->
+                    <li>
+                        <a href="#" 
+                           class="nav-link flex items-center justify-center lg:justify-start space-x-0 lg:space-x-0 group-hover:lg:space-x-3 px-2 lg:px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-all duration-200 group">
+                            <i class="fas fa-cog w-5 text-center text-gray-400 group-hover:text-blue-600"></i>
+                            <span class="hidden group-hover:lg:block transition-all duration-300">Settings</span>
+                        </a>
+                    </li>
+
+                    <!-- Help -->
+                    <li>
+                        <a href="#" 
+                           class="nav-link flex items-center justify-center lg:justify-start space-x-0 lg:space-x-0 group-hover:lg:space-x-3 px-2 lg:px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-all duration-200 group">
+                            <i class="fas fa-question-circle w-5 text-center text-gray-400 group-hover:text-blue-600"></i>
+                            <span class="hidden group-hover:lg:block transition-all duration-300">Help & Support</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <!-- Sidebar Footer -->
+            <div class="p-4 border-t border-gray-200 mt-auto flex flex-col items-center lg:items-start group-hover:lg:items-start">
+                <!-- Authentication Links -->
+                <a href="{% url 'logout' %}" 
+                   class="nav-link flex items-center justify-center lg:justify-start space-x-0 lg:space-x-0 group-hover:lg:space-x-3 px-2 lg:px-4 py-3 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg transition-all duration-200 group mb-2">
+                    <i class="fas fa-sign-out-alt w-5 text-center group-hover:text-red-700"></i>
+                    <span class="hidden group-hover:lg:block transition-all duration-300">Logout</span>
+                </a>
+                <p class="text-xs text-gray-400 mt-2 hidden group-hover:lg:block transition-all duration-300">&copy; 2024 SmartLearn</p>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 flex flex-col lg:ml-sidebar-collapsed group-hover:lg:ml-sidebar-expanded min-h-screen transition-all duration-300">
+            <!-- Mobile Header -->
+            <div class="bg-white shadow-sm border-b border-gray-200 lg:hidden">
+                <div class="flex items-center justify-between p-4">
+                    <button id="sidebarToggle" class="text-gray-600 hover:text-gray-900">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <a href="/" class="flex items-center">
+                        <img src="{% static "home/logo.jpg" %}" alt="logo" class="w-24" />
+                    </a>
+                    <div class="w-8"></div> <!-- Spacer for balance -->
+                </div>
+            </div>
+
+            <!-- Mobile Sidebar Overlay -->
+            <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden hidden"></div>
+
+            <!-- Messages Display -->
+            {% if messages %}
+            <div class="w-full px-4 sm:px-6 lg:px-8 py-4">
+                <div class="space-y-3 max-w-7xl mx-auto">
+                    {% for message in messages %}
+                    <div class="rounded-lg shadow-lg border-l-4 p-4 animate-fade-in
+                        {% if message.tags == 'success' %}bg-green-50 border-green-400
+                        {% elif message.tags == 'error' %}bg-red-50 border-red-400
+                        {% elif message.tags == 'warning' %}bg-yellow-50 border-yellow-400
+                        {% elif message.tags == 'info' %}bg-blue-50 border-blue-400
+                        {% else %}bg-gray-50 border-gray-400{% endif %}"
+                         data-auto-dismiss="true">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <!-- Message Icon -->
+                                {% if message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
+                                    <div class="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-check-circle text-green-600 text-sm"></i>
+                                    </div>
+                                {% elif message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+                                    <div class="flex-shrink-0 w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-exclamation-circle text-red-600 text-sm"></i>
+                                    </div>
+                                {% elif message.level == DEFAULT_MESSAGE_LEVELS.WARNING %}
+                                    <div class="flex-shrink-0 w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-exclamation-triangle text-yellow-600 text-sm"></i>
+                                    </div>
+                                {% elif message.level == DEFAULT_MESSAGE_LEVELS.INFO %}
+                                    <div class="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-info-circle text-blue-600 text-sm"></i>
+                                    </div>
+                                {% else %}
+                                    <div class="flex-shrink-0 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-bell text-gray-600 text-sm"></i>
+                                    </div>
+                                {% endif %}
+                                
+                                <!-- Message Text -->
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium 
+                                        {% if message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}text-green-800
+                                        {% elif message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}text-red-800
+                                        {% elif message.level == DEFAULT_MESSAGE_LEVELS.WARNING %}text-yellow-800
+                                        {% elif message.level == DEFAULT_MESSAGE_LEVELS.INFO %}text-blue-800
+                                        {% else %}text-gray-800{% endif %}">
+                                        {{ message }}
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <!-- Close Button -->
+                            <button type="button" 
+                                    class="message-close flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center hover:bg-black hover:bg-opacity-10 transition-colors duration-150"
+                                    aria-label="Close message">
+                                <i class="fas fa-times text-gray-500 text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Page Content -->
+            <div class="flex-1 p-4 sm:p-6 lg:p-8 overflow-x-hidden">
+                <div class="max-w-7xl mx-auto w-full">
+                    {% block content %}
+                    <!-- Content will be injected here -->
+                    {% endblock %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'js/cursor.js' %}"></script>
+    <!-- JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            const mainContent = document.querySelector('.flex-1');
+
+            // Toggle sidebar on mobile
+            sidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('-translate-x-full');
+                sidebarOverlay.classList.toggle('hidden');
+            });
+
+            // Close sidebar when clicking on overlay
+            sidebarOverlay.addEventListener('click', function() {
+                sidebar.classList.add('-translate-x-full');
+                sidebarOverlay.classList.add('hidden');
+            });
+
+            // Close sidebar on mobile when clicking a link
+            document.querySelectorAll('#sidebar a').forEach(link => {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth < 1024) {
+                        sidebar.classList.add('-translate-x-full');
+                        sidebarOverlay.classList.add('hidden');
+                    }
+                });
+            });
+
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                if (window.innerWidth >= 1024) {
+                    sidebar.classList.remove('-translate-x-full');
+                    sidebarOverlay.classList.add('hidden');
+                }
+            });
+
+            // Message handling
+            const autoDismissMessages = document.querySelectorAll('[data-auto-dismiss="true"]');
+            autoDismissMessages.forEach(message => {
+                setTimeout(() => {
+                    dismissMessage(message);
+                }, 5000);
+            });
+
+            const closeButtons = document.querySelectorAll('.message-close');
+            closeButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const message = this.closest('.rounded-lg');
+                    dismissMessage(message);
+                });
+            });
+
+            function dismissMessage(message) {
+                if (message) {
+                    message.classList.add('opacity-0', 'transition-opacity', 'duration-300');
+                    setTimeout(() => {
+                        message.remove();
+                        const messagesContainer = document.querySelector('.space-y-3');
+                        if (messagesContainer && messagesContainer.children.length === 0) {
+                            messagesContainer.closest('.mx-auto').remove();
+                        }
+                    }, 300);
+                }
+            }
+
+            // Active link highlighting based on current URL
+            function setActiveNavLink() {
+                const currentPath = window.location.pathname;
+                const navLinks = document.querySelectorAll('.nav-link');
+                
+                navLinks.forEach(link => {
+                    const href = link.getAttribute('href');
+                    if (href && currentPath.includes(href) && href !== '/') {
+                        link.classList.add('bg-blue-50', 'text-blue-600', 'border-r-2', 'border-blue-600');
+                        const icon = link.querySelector('i');
+                        if (icon) {
+                            icon.classList.remove('text-gray-400');
+                            icon.classList.add('text-blue-600');
+                        }
+                    }
+                });
+            }
+
+            setActiveNavLink();
+        });
+    </script>
+
+    <style>
+        /* Custom animations */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-fade-in { 
+            animation: fadeInUp 0.3s ease-out; 
+        }
+
+        /* Ensure content doesn't overflow */
+        .max-w-7xl {
+            max-width: 80rem;
+        }
+
+        /* Custom sidebar width classes */
+        .sidebar-collapsed {
+            width: 70px;
+        }
+
+        .sidebar-expanded {
+            width: 260px;
+        }
+    </style>
+</body>
+</html>

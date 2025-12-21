@@ -1,0 +1,304 @@
+{% extends 'core/base_with_sidebar.html' %}
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8 px-4">
+    <div class="max-w-2xl mx-auto">
+        
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-lg">
+                <i class="fas fa-file-upload text-white text-xl"></i>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Submit Assignment</h1>
+            <p class="text-gray-600">Complete and submit your work for review</p>
+        </div>
+
+        <!-- Assignment Info -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+            <div class="flex items-start space-x-4">
+                <div class="w-12 h-12 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-tasks text-blue-600"></i>
+                </div>
+                <div class="flex-1">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-1">{{ assignment.title }}</h2>
+                    <p class="text-gray-600 text-sm mb-2">{{ assignment.description|truncatewords:20 }}</p>
+                    <div class="flex items-center space-x-4 text-sm text-gray-500">
+                        <div class="flex items-center space-x-1">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>Due: {{ assignment.due_date|date:"M d, Y H:i" }}</span>
+                        </div>
+                        <div class="flex items-center space-x-1">
+                            <i class="fas fa-book"></i>
+                            <span>{{ assignment.subject.title }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Submission Form -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-4 rounded-t-xl">
+                <h3 class="text-lg font-semibold text-white flex items-center space-x-2">
+                    <i class="fas fa-edit"></i>
+                    <span>Assignment Submission</span>
+                </h3>
+            </div>
+
+            <form method="POST" enctype="multipart/form-data" id="submissionForm" class="p-6 space-y-6">
+                {% csrf_token %}
+
+                <!-- Answer Field -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center space-x-2">
+                        <i class="fas fa-edit text-blue-500"></i>
+                        <span>Written Answer</span>
+                        <span class="text-xs text-gray-400 font-normal">(at least 200 characters)</span>
+                    </label>
+                    <div class="relative">
+                        {{ form.answer }}
+                        <div class="absolute bottom-3 right-3">
+                            <span id="charCount" class="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600">0/200</span>
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Provide your detailed answer (minimum 200 characters)</p>
+                </div>
+
+                <!-- Comment Field -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center space-x-2">
+                        <i class="fas fa-comment text-green-500"></i>
+                        <span>Additional Comments</span>
+                        <span class="text-xs text-gray-400 font-normal">(optional)</span>
+                    </label>
+                    {{ form.comment }}
+                    <p class="text-xs text-gray-500 mt-1">Add any notes or context for your submission</p>
+                </div>
+
+                <!-- File Upload -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center space-x-2">
+                        <i class="fas fa-paperclip text-purple-500"></i>
+                        <span>File Attachment</span>
+                    </label>
+                    <div class="relative">
+                        {{ form.file }}
+                        <div id="fileUploadArea" class="mt-2 p-6 border-2 border-dashed border-gray-300 rounded-lg text-center hover:border-blue-400 transition-colors duration-200 bg-gray-50 cursor-pointer">
+                            <i class="fas fa-cloud-upload-alt text-gray-400 text-2xl mb-3"></i>
+                            <p class="text-sm text-gray-600 font-medium mb-1">Click to upload or drag and drop</p>
+                            <p class="text-xs text-gray-500">PDF, DOC, DOCX, ZIP (Max: 10MB)</p>
+                        </div>
+                        <div id="fileInfo" class="hidden mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                            <div class="flex items-center space-x-2 text-green-700">
+                                <i class="fas fa-check-circle"></i>
+                                <span id="fileName" class="text-sm font-medium"></span>
+                                <span id="fileSize" class="text-xs"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Validation Requirements -->
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <div class="flex items-start space-x-3">
+                        <i class="fas fa-exclamation-triangle text-yellow-500 mt-0.5"></i>
+                        <div class="text-sm text-yellow-800">
+                            <p class="font-medium mb-1">Submission Requirements:</p>
+                            <ul class="text-xs space-y-1">
+                                <li>• You must provide either a written answer (minimum 200 characters) OR upload a file</li>
+                                <li>• Both fields cannot be empty</li>
+                                <li>• Written answers should be detailed and comprehensive</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row gap-4 pt-4 border-t border-gray-200">
+                    <a href="{% url 'view_subject_student' assignment.subject.id %}" 
+                       class="bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-6 rounded-lg font-semibold transition flex items-center justify-center space-x-2 order-2 sm:order-1">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Cancel</span>
+                    </a>
+                    
+                    <button type="submit" id="submitBtn"
+                            class="bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white py-3 px-6 rounded-lg font-semibold shadow-lg transition-all duration-200 transform hover:scale-105 flex items-center justify-center space-x-2 order-1 sm:order-2">
+                        <i class="fas fa-paper-plane"></i>
+                        <span>Submit Assignment</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Help Tips -->
+        <div class="mt-6 bg-blue-50 rounded-lg p-4 border border-blue-200">
+            <div class="flex items-start space-x-3">
+                <i class="fas fa-lightbulb text-blue-500 mt-0.5"></i>
+                <div>
+                    <h4 class="text-sm font-semibold text-blue-800 mb-1">Submission Tips</h4>
+                    <ul class="text-xs text-blue-700 space-y-1">
+                        <li>• Ensure your file is clearly named and in the correct format</li>
+                        <li>• Double-check your work before submitting</li>
+                        <li>• You cannot edit your submission after sending</li>
+                        <li>• Written answers should be at least 200 characters long</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Include SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('submissionForm');
+    const answerField = document.querySelector('textarea[name="answer"]');
+    const fileInput = document.querySelector('input[type="file"]');
+    const fileUploadArea = document.getElementById('fileUploadArea');
+    const fileInfo = document.getElementById('fileInfo');
+    const charCount = document.getElementById('charCount');
+    const submitBtn = document.getElementById('submitBtn');
+
+    // Character counter for answer field
+    answerField.addEventListener('input', function() {
+        const count = this.value.length;
+        charCount.textContent = `${count}/200`;
+        
+        // Update color based on count
+        if (count >= 200) {
+            charCount.className = 'text-xs px-2 py-1 rounded-full bg-green-100 text-green-700';
+        } else if (count > 0) {
+            charCount.className = 'text-xs px-2 py-1 rounded-full bg-yellow-100 text-yellow-700';
+        } else {
+            charCount.className = 'text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600';
+        }
+    });
+
+    // File upload feedback
+    fileInput.addEventListener('change', function(e) {
+        if (e.target.files.length > 0) {
+            const file = e.target.files[0];
+            const fileSize = (file.size / (1024 * 1024)).toFixed(2);
+            
+            fileUploadArea.classList.add('hidden');
+            fileInfo.classList.remove('hidden');
+            
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileSize').textContent = `(${fileSize} MB)`;
+        }
+    });
+
+    // Allow drag and drop
+    fileUploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        this.classList.add('border-blue-400', 'bg-blue-50');
+    });
+
+    fileUploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        this.classList.remove('border-blue-400', 'bg-blue-50');
+    });
+
+    fileUploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        this.classList.remove('border-blue-400', 'bg-blue-50');
+        if (e.dataTransfer.files.length) {
+            fileInput.files = e.dataTransfer.files;
+            fileInput.dispatchEvent(new Event('change'));
+        }
+    });
+
+    // Form validation
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const answer = answerField.value.trim();
+        const hasFile = fileInput.files.length > 0;
+        
+        // Validate that either answer or file is provided
+        if (!hasFile && answer.length < 200) {
+            Swal.fire({
+                title: 'Submission Incomplete!',
+                html: `
+                    <div class="text-left">
+                        <p class="text-gray-700 mb-4">Please provide either:</p>
+                        <ul class="text-sm text-gray-600 space-y-2 mb-4">
+                            <li class="flex items-center space-x-2">
+                                <i class="fas fa-file-upload text-blue-500"></i>
+                                <span>A file upload</span>
+                            </li>
+                            <li class="flex items-center space-x-2">
+                                <i class="fas fa-edit text-green-500"></i>
+                                <span>Or a written answer with at least 200 characters</span>
+                            </li>
+                        </ul>
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-3 mt-4">
+                            <div class="flex items-center space-x-2 text-red-700">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <span class="text-sm">Current answer: ${answer.length}/200 characters</span>
+                            </div>
+                        </div>
+                    </div>
+                `,
+                icon: 'warning',
+                confirmButtonText: 'Got it!',
+                confirmButtonColor: '#3b82f6',
+                customClass: {
+                    popup: 'rounded-2xl',
+                    confirmButton: 'px-6 py-2 rounded-lg font-semibold'
+                }
+            });
+            return;
+        }
+
+        // If validation passes, submit the form
+        this.submit();
+    });
+
+    // Initialize character count on page load
+    answerField.dispatchEvent(new Event('input'));
+});
+</script>
+
+<style>
+/* Form field styling */
+form textarea {
+    width: 100%;
+    padding: 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    font-size: 14px;
+    min-height: 150px;
+    resize: vertical;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+form textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+input[type="file"] {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+/* SweetAlert customization */
+.swal2-popup {
+    border-radius: 16px !important;
+}
+
+.swal2-confirm {
+    border-radius: 8px !important;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,298 @@
+{% extends 'core/base_with_sidebar.html' %}
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-6 px-4">
+    <div class="max-w-7xl mx-auto">
+        
+        <!-- Header -->
+        <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800 mb-2">Submissions</h1>
+                    <h2 class="text-lg text-gray-600">{{ assignment.title }}</h2>
+                    <p class="text-sm text-gray-500 mt-1">{{ assignment.subject.title }}</p>
+                </div>
+                <div class="text-center lg:text-right">
+                    <p class="text-sm text-gray-600">Due: {{ assignment.due_date|date:"M d, Y H:i" }}</p>
+                    <div class="flex items-center justify-center lg:justify-end space-x-4 mt-2">
+                        <span class="text-sm font-medium text-blue-600">{{ assignment.submissions.count }} total</span>
+                        <span class="text-sm font-medium text-green-600">{{ graded_count }} graded</span>
+                        <span class="text-sm font-medium text-orange-600">{{ not_graded_count }} to grade</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs Navigation -->
+        <div class="bg-white rounded-xl shadow-sm p-4 mb-6">
+            <div class="border-b border-gray-200">
+                <nav class="flex space-x-8" aria-label="Tabs">
+                    <a href="?tab=not_graded&page=1" 
+                       class="{% if current_tab == 'not_graded' %}border-orange-500 text-orange-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm flex items-center space-x-2">
+                        <i class="fas fa-inbox {% if current_tab == 'not_graded' %}text-orange-500{% else %}text-gray-400{% endif %}"></i>
+                        <span>To Grade</span>
+                        {% if not_graded_count > 0 %}
+                            <span class="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full">{{ not_graded_count }}</span>
+                        {% endif %}
+                    </a>
+                    
+                    <a href="?tab=graded&page=1" 
+                       class="{% if current_tab == 'graded' %}border-green-500 text-green-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm flex items-center space-x-2">
+                        <i class="fas fa-check-circle {% if current_tab == 'graded' %}text-green-500{% else %}text-gray-400{% endif %}"></i>
+                        <span>Graded</span>
+                        {% if graded_count > 0 %}
+                            <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">{{ graded_count }}</span>
+                        {% endif %}
+                    </a>
+                </nav>
+            </div>
+        </div>
+
+        {% if submissions %}
+        <!-- Submissions Table -->
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Student</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Submitted</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Answer</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Comments</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">File</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Grade</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for submission in submissions %}
+                        <tr class="hover:bg-gray-50 transition-colors {% if current_tab == 'not_graded' %}bg-orange-50{% endif %}">
+                            <!-- Student -->
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold text-sm mr-3">
+                                        {{ submission.student.get_display_name|make_list|first|upper }}
+                                    </div>
+                                    <div>
+                                        <div class="text-sm font-medium text-gray-900">{{ submission.student.get_display_name }}</div>
+                                        <div class="text-xs text-gray-500">{{ submission.student.email }}</div>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- Submitted Date -->
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ submission.submitted_at|date:"M d, Y" }}</div>
+                                <div class="text-xs text-gray-500">{{ submission.submitted_at|date:"H:i" }}</div>
+                            </td>
+
+                            <!-- Answer -->
+                            <td class="px-6 py-4 max-w-xs">
+                                {% if submission.answer %}
+                                <div class="text-sm text-gray-700 line-clamp-3">{{ submission.answer }}</div>
+                                <button onclick="showFullText('answer-{{ submission.id }}')" 
+                                        class="text-xs text-blue-600 hover:text-blue-800 mt-1">
+                                    View full answer
+                                </button>
+                                {% else %}
+                                <span class="text-xs text-gray-400 italic">No answer provided</span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Comments -->
+                            <td class="px-6 py-4 max-w-xs">
+                                {% if submission.comment %}
+                                <div class="text-sm text-gray-600 line-clamp-2">{{ submission.comment }}</div>
+                                <button onclick="showFullText('comment-{{ submission.id }}')" 
+                                        class="text-xs text-blue-600 hover:text-blue-800 mt-1">
+                                    View full comment
+                                </button>
+                                {% else %}
+                                <span class="text-xs text-gray-400 italic">No comments</span>
+                                {% endif %}
+                            </td>
+
+                            <!-- File -->
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if submission.file %}
+                                <a href="{{ submission.file.url }}" 
+                                   target="_blank"
+                                   class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm hover:bg-blue-200 transition-colors">
+                                    <i class="fas fa-download mr-1 text-xs"></i>
+                                    Download
+                                </a>
+                                {% else %}
+                                <span class="text-xs text-gray-400 italic">No file</span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Grade -->
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if submission.grade %}
+                                <div class="flex items-center">
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full 
+                                        {% if submission.grade >= 80 %}bg-green-100 text-green-800
+                                        {% elif submission.grade >= 60 %}bg-yellow-100 text-yellow-800
+                                        {% else %}bg-red-100 text-red-800{% endif %}">
+                                        {{ submission.grade }}%
+                                    </span>
+                                </div>
+                                {% else %}
+                                <span class="text-xs text-gray-400 italic">Not graded</span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Actions -->
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <a href="{% url 'grade_submission' submission.id %}"
+                                   class="inline-flex items-center px-4 py-2 {% if current_tab == 'not_graded' %}bg-orange-600 hover:bg-orange-700{% else %}bg-blue-600 hover:bg-blue-700{% endif %} text-white text-sm font-medium rounded-lg transition-colors">
+                                    <i class="fas fa-edit mr-2"></i>
+                                    {% if current_tab == 'not_graded' %}Grade{% else %}View{% endif %}
+                                </a>
+                            </td>
+                        </tr>
+
+                        <!-- Full Text Modals (hidden by default) -->
+                        {% if submission.answer %}
+                        <div id="answer-{{ submission.id }}" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                            <div class="bg-white rounded-xl max-w-2xl w-full max-h-96 overflow-y-auto">
+                                <div class="p-6">
+                                    <div class="flex justify-between items-center mb-4">
+                                        <h3 class="text-lg font-semibold text-gray-800">Full Answer - {{ submission.student.get_display_name }}</h3>
+                                        <button onclick="hideFullText('answer-{{ submission.id }}')" 
+                                                class="text-gray-400 hover:text-gray-600">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                    <div class="prose max-w-none">
+                                        <p class="text-gray-700 whitespace-pre-wrap">{{ submission.answer }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if submission.comment %}
+                        <div id="comment-{{ submission.id }}" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                            <div class="bg-white rounded-xl max-w-2xl w-full max-h-96 overflow-y-auto">
+                                <div class="p-6">
+                                    <div class="flex justify-between items-center mb-4">
+                                        <h3 class="text-lg font-semibold text-gray-800">Student Comments - {{ submission.student.get_display_name }}</h3>
+                                        <button onclick="hideFullText('comment-{{ submission.id }}')" 
+                                                class="text-gray-400 hover:text-gray-600">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                    <div class="prose max-w-none">
+                                        <p class="text-gray-700 whitespace-pre-wrap">{{ submission.comment }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if submissions.paginator.num_pages > 1 %}
+            <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
+                <div class="flex items-center justify-between">
+                    <div class="text-sm text-gray-700">
+                        Showing page {{ submissions.number }} of {{ submissions.paginator.num_pages }}
+                    </div>
+                    <div class="flex space-x-2">
+                        {% if submissions.has_previous %}
+                            <a href="?tab={{ current_tab }}&page={{ submissions.previous_page_number }}" 
+                               class="px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm flex items-center">
+                                <i class="fas fa-chevron-left mr-1 text-xs"></i>
+                                Previous
+                            </a>
+                        {% endif %}
+
+                        <div class="flex space-x-1">
+                            {% for num in submissions.paginator.page_range %}
+                                {% if submissions.number == num %}
+                                    <span class="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold">
+                                        {{ num }}
+                                    </span>
+                                {% else %}
+                                    <a href="?tab={{ current_tab }}&page={{ num }}" 
+                                       class="px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm">
+                                        {{ num }}
+                                    </a>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+
+                        {% if submissions.has_next %}
+                            <a href="?tab={{ current_tab }}&page={{ submissions.next_page_number }}" 
+                               class="px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm flex items-center">
+                                Next
+                                <i class="fas fa-chevron-right ml-1 text-xs"></i>
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% else %}
+        <!-- Empty State -->
+        <div class="bg-white rounded-xl shadow-sm p-12 text-center">
+            <div class="w-20 h-20 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                <i class="fas fa-inbox text-gray-400 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-700 mb-2">{{ empty_message }}</h3>
+            <p class="text-gray-500 max-w-md mx-auto">{{ empty_description }}</p>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<style>
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+</style>
+
+<script>
+function showFullText(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function hideFullText(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('flex');
+        modal.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+}
+
+// Close modal when clicking outside
+document.addEventListener('click', function(event) {
+    if (event.target.classList.contains('bg-opacity-50')) {
+        event.target.classList.remove('flex');
+        event.target.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+});
+</script>
+{% endblock %}
