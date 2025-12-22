@@ -2,8 +2,9 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.urls import reverse
 from django.utils.safestring import mark_safe
-from .models import Assignment, Submission, ClassMaterial
-from django.db import models  # Import models for submission_summary aggregation
+from .models import Assignment, Submission, ClassMaterial, Book
+from django.db import models
+from django.contrib import messages
 
 class SubmissionInline(admin.TabularInline):
     """Inline admin for viewing submissions within an assignment"""
@@ -239,3 +240,348 @@ class ClassMaterialAdmin(admin.ModelAdmin):
         return bool(obj.file)
     has_file.boolean = True
     has_file.short_description = 'File attached'
+    
+# notes/admin.py book model admin
+@admin.register(Book)
+class BookAdmin(admin.ModelAdmin):
+    """Admin configuration for Book model"""
+    
+    # List display configuration
+    list_display = [
+        'title_preview', 
+        'author_display', 
+        'subject_display', 
+        'teacher_display',
+        'publication_year',
+        'is_required_badge',
+        'file_preview',
+        'created_at_short'
+    ]
+    
+    list_display_links = ['title_preview', 'author_display']
+    
+    # Filter options
+    list_filter = [
+        'is_required',
+        'subject',
+        'teacher',
+        'publication_year',
+        'language',
+        'created_at'
+    ]
+    
+    # Search configuration
+    search_fields = [
+        'title',
+        'subtitle',
+        'author_first_name',
+        'author_last_name',
+        'additional_authors',
+        'description',
+        'isbn',
+        'publisher'
+    ]
+    
+    # Fieldsets for detail view
+    fieldsets = (
+        ('Basic Information', {
+            'fields': (
+                'title', 
+                'subtitle',
+                ('author_first_name', 'author_last_name'),
+                'additional_authors'
+            ),
+            'description': 'Enter the basic details of the book'
+        }),
+        ('Publication Details', {
+            'fields': (
+                ('publication_year', 'edition'),
+                'publisher',
+                'isbn',
+                'url',
+                ('pages', 'language')
+            ),
+            'description': 'Publication and identification information'
+        }),
+        ('Course Association', {
+            'fields': (
+                'subject',
+                'teacher',
+                'is_required'
+            ),
+            'description': 'Link this book to a course and teacher'
+        }),
+        ('Files & Media', {
+            'fields': (
+                'cover_image',
+                'cover_image_preview',
+                'pdf_file',
+                'file_info'
+            ),
+            'description': 'Upload book files and cover image'
+        }),
+        ('Description', {
+            'fields': ('description',),
+            'description': 'Detailed description of the book'
+        }),
+        ('Metadata', {
+            'fields': (
+                ('created_at', 'updated_at'),
+                'apa_citation'
+            ),
+            'description': 'Automatically generated metadata',
+            'classes': ('collapse',)
+        }),
+    )
+    
+    # Read-only fields
+    readonly_fields = [
+        'cover_image_preview',
+        'file_info',
+        'apa_citation',
+        'created_at',
+        'updated_at'
+    ]
+    
+    # Date hierarchy
+    date_hierarchy = 'created_at'
+    
+    # Actions
+    actions = [
+        'mark_as_required',
+        'mark_as_recommended',
+        'generate_citation_report'
+    ]
+    
+    # Custom ordering
+    ordering = ['-created_at']
+    
+    # Autocomplete fields
+    autocomplete_fields = ['subject', 'teacher']
+    
+    # Custom list filters
+    list_select_related = ['subject', 'teacher']
+    
+    # Items per page
+    list_per_page = 25
+    
+    # Custom methods for list display
+    def title_preview(self, obj):
+        """Display shortened title with icon"""
+        short_title = obj.get_short_title()
+        return format_html(
+            '<div style="display: flex; align-items: center;">'
+            '<span style="margin-right: 8px;">📚</span>'
+            '<span style="font-weight: 500;">{}</span>'
+            '</div>',
+            short_title
+        )
+    title_preview.short_description = 'Title'
+    title_preview.admin_order_field = 'title'
+    
+    def author_display(self, obj):
+        """Display author in Lastname, F. format"""
+        return f"{obj.author_last_name}, {obj.author_first_name[0]}."
+    author_display.short_description = 'Author'
+    author_display.admin_order_field = 'author_last_name'
+    
+    def subject_display(self, obj):
+        """Display subject with link"""
+        url = reverse('admin:courses_subject_changelist')
+        return format_html(
+            '<a href="{}?q={}" style="color: #4F46E5;">{}</a>',
+            url,
+            obj.subject.id,
+            obj.subject.title
+        )
+    subject_display.short_description = 'Subject'
+    
+    def teacher_display(self, obj):
+        """Display teacher with email"""
+        return format_html(
+            '{}<br><small style="color: #6B7280;">{}</small>',
+            obj.teacher.get_full_name() or obj.teacher.username,
+            obj.teacher.email
+        )
+    teacher_display.short_description = 'Teacher'
+    
+    def is_required_badge(self, obj):
+        """Display required status as badge"""
+        if obj.is_required:
+            return format_html(
+                '<span style="background-color: #F59E0B; color: white; '
+                'padding: 2px 8px; border-radius: 12px; font-size: 12px; '
+                'font-weight: 500;">Required</span>'
+            )
+        return format_html(
+            '<span style="background-color: #6B7280; color: white; '
+            'padding: 2px 8px; border-radius: 12px; font-size: 12px; '
+            'font-weight: 500;">Recommended</span>'
+        )
+    is_required_badge.short_description = 'Status'
+    
+    def file_preview(self, obj):
+        """Display file information"""
+        if obj.pdf_file:
+            file_size = obj.get_file_size()
+            return format_html(
+                '<div style="display: flex; align-items: center;">'
+                '<span style="margin-right: 4px;">📄</span>'
+                '<span style="font-size: 12px; color: #6B7280;">{}</span>'
+                '</div>',
+                file_size
+            )
+        return format_html(
+            '<span style="color: #9CA3AF; font-size: 12px;">No file</span>'
+        )
+    file_preview.short_description = 'File'
+    
+    def created_at_short(self, obj):
+        """Display short date format"""
+        return obj.created_at.strftime('%b %d, %Y')
+    created_at_short.short_description = 'Added'
+    created_at_short.admin_order_field = 'created_at'
+    
+    # Custom methods for detail view
+    def cover_image_preview(self, obj):
+        """Display cover image preview"""
+        if obj.cover_image:
+            return format_html(
+                '<img src="{}" style="max-width: 200px; max-height: 300px; '
+                'border-radius: 8px; border: 1px solid #E5E7EB;" />',
+                obj.cover_image.url
+            )
+        return format_html(
+            '<div style="width: 200px; height: 300px; background: #F3F4F6; '
+            'display: flex; align-items: center; justify-content: center; '
+            'border-radius: 8px; border: 1px dashed #D1D5DB;">'
+            '<span style="color: #9CA3AF;">No cover image</span>'
+            '</div>'
+        )
+    cover_image_preview.short_description = 'Cover Preview'
+    
+    def file_info(self, obj):
+        """Display file information"""
+        if obj.pdf_file:
+            return format_html(
+                '<div style="background: #F9FAFB; padding: 12px; border-radius: 6px;">'
+                '<div style="display: flex; align-items: center; margin-bottom: 8px;">'
+                '<span style="margin-right: 8px;">📄</span>'
+                '<strong>PDF File:</strong>'
+                '</div>'
+                '<div style="margin-left: 24px;">'
+                '<div>Size: {}</div>'
+                '<div><a href="{}" target="_blank">Download PDF</a></div>'
+                '</div>'
+                '</div>',
+                obj.get_file_size(),
+                obj.pdf_file.url
+            )
+        return format_html(
+            '<div style="color: #9CA3AF; font-style: italic;">No PDF file uploaded</div>'
+        )
+    file_info.short_description = 'File Information'
+    
+    def apa_citation(self, obj):
+        """Display APA7 citation"""
+        citation = obj.get_apa7_citation()
+        return format_html(
+            '<div style="background: #F0F9FF; padding: 16px; border-radius: 8px; '
+            'border-left: 4px solid #3B82F6; font-family: monospace; '
+            'white-space: pre-wrap; word-wrap: break-word;">'
+            '<strong style="color: #1E40AF; margin-bottom: 8px; display: block;">'
+            'APA7 Citation:</strong>'
+            '{}'
+            '</div>',
+            citation
+        )
+    apa_citation.short_description = 'APA7 Citation'
+    
+    # Custom admin actions
+    def mark_as_required(self, request, queryset):
+        """Mark selected books as required reading"""
+        updated = queryset.update(is_required=True)
+        self.message_user(
+            request,
+            f'{updated} book(s) marked as required reading.',
+            messages.SUCCESS
+        )
+    mark_as_required.short_description = "Mark selected books as required"
+    
+    def mark_as_recommended(self, request, queryset):
+        """Mark selected books as recommended reading"""
+        updated = queryset.update(is_required=False)
+        self.message_user(
+            request,
+            f'{updated} book(s) marked as recommended reading.',
+            messages.SUCCESS
+        )
+    mark_as_recommended.short_description = "Mark selected books as recommended"
+    
+    def generate_citation_report(self, request, queryset):
+        """Generate citation report for selected books"""
+        report_lines = []
+        for book in queryset:
+            citation = book.get_apa7_citation()
+            report_lines.append(f"{book.title}:")
+            report_lines.append(f"  {citation}")
+            report_lines.append("")  # Empty line between books
+        
+        response_text = "\n".join(report_lines)
+        
+        # For simplicity, just show in message
+        # In production, you might want to generate a downloadable file
+        self.message_user(
+            request,
+            f'Generated citations for {queryset.count()} book(s). '
+            f'Check the detailed view for each book.',
+            messages.INFO
+        )
+        
+        # You could also return a downloadable text file:
+        # response = HttpResponse(response_text, content_type='text/plain')
+        # response['Content-Disposition'] = 'attachment; filename="citations.txt"'
+        # return response
+    generate_citation_report.short_description = "Generate citation report"
+    
+    # Custom form configuration
+    def get_form(self, request, obj=None, **kwargs):
+        """Customize the form"""
+        form = super().get_form(request, obj, **kwargs)
+        
+        # Add custom help text
+        form.base_fields['publication_year'].help_text = (
+            'Year of publication (e.g., 2023). '
+            'Future years beyond next year are not allowed.'
+        )
+        form.base_fields['isbn'].help_text = (
+            '10 or 13 digit ISBN (International Standard Book Number). '
+            'Hyphens and spaces will be removed during validation.'
+        )
+        form.base_fields['pdf_file'].help_text = (
+            'Upload PDF file only. Maximum file size depends on server configuration.'
+        )
+        
+        return form
+    
+    # Custom save method
+    def save_model(self, request, obj, form, change):
+        """Custom save logic"""
+        if not change:  # If creating a new book
+            # Auto-assign teacher if not set
+            if not obj.teacher_id:
+                obj.teacher = request.user
+        
+        # Run clean method to validate ISBN and publication year
+        obj.full_clean()
+        
+        super().save_model(request, obj, form, change)
+    
+    # Custom changelist view
+    def changelist_view(self, request, extra_context=None):
+        """Add custom context to changelist"""
+        extra_context = extra_context or {}
+        extra_context['total_books'] = Book.objects.count()
+        extra_context['required_books'] = Book.objects.filter(is_required=True).count()
+        return super().changelist_view(request, extra_context=extra_context)
+    

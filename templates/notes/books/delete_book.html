@@ -1,0 +1,111 @@
+{% extends 'core/base_with_sidebar.html' %}
+{% load static %}
+
+{% block title %}Delete Book - {{ book.title }}{% endblock %}
+
+{% block content %}
+<!-- Overlay Background -->
+<div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex items-center justify-center p-4">
+    <!-- Confirmation Modal -->
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md transform transition-all duration-300 scale-100">
+        <!-- Warning Header -->
+        <div class="p-6 border-b border-red-100 bg-gradient-to-r from-red-50 to-orange-50">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-12 h-12 bg-gradient-to-br from-red-500 to-orange-500 rounded-full flex items-center justify-center">
+                        <i class="fas fa-exclamation-triangle text-white text-xl"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-xl font-bold text-gray-900">Delete Book</h3>
+                    <p class="text-gray-600 mt-1">This action cannot be undone</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Book Info -->
+        <div class="p-6">
+            <div class="mb-6">
+                <h4 class="text-lg font-semibold text-gray-800 mb-3">You are about to delete:</h4>
+                
+                <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                    <div class="flex items-start space-x-3">
+                        <div class="flex-shrink-0 w-10 h-12 bg-gradient-to-br from-blue-100 to-indigo-100 rounded flex items-center justify-center">
+                            <i class="fas fa-book text-blue-600"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="font-medium text-gray-900 truncate">{{ book.title }}</p>
+                            <p class="text-sm text-gray-600 mt-1">
+                                {{ book.author_last_name }}, {{ book.author_first_name.0 }}.
+                            </p>
+                            <div class="flex items-center mt-2">
+                                <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium 
+                                    {% if book.is_required %}bg-amber-100 text-amber-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+                                    <i class="fas {% if book.is_required %}fa-star{% else %}fa-bookmark{% endif %} mr-1 text-xs"></i>
+                                    {% if book.is_required %}Required{% else %}Recommended{% endif %}
+                                </span>
+                                <span class="ml-2 text-xs text-gray-500">
+                                    {{ book.publication_year }} • {{ book.subject.title }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Warning Message -->
+            <div class="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-radiation-alt text-red-500"></i>
+                    </div>
+                    <div class="ml-3">
+                        <h5 class="text-sm font-medium text-red-800">What will be deleted:</h5>
+                        <ul class="mt-2 text-sm text-red-700 space-y-1 list-disc list-inside">
+                            <li>Book record and all metadata</li>
+                            <li>APA7 citation information</li>
+                            <li>PDF file and cover image</li>
+                            <li>All associated references</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <form method="POST" class="space-y-3">
+                {% csrf_token %}
+                <div class="flex flex-col sm:flex-row-reverse space-y-3 sm:space-y-0 sm:space-x-3 sm:space-x-reverse">
+                    <button type="submit"
+                            class="w-full sm:w-auto inline-flex justify-center items-center px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white font-medium rounded-xl hover:from-red-700 hover:to-red-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 shadow-lg transform hover:-translate-y-0.5 transition-all duration-200">
+                        <i class="fas fa-trash mr-2"></i>
+                        Yes, Delete Book
+                    </button>
+                    
+                    <a href="{% url 'book_detail' book.id %}"
+                       class="w-full sm:w-auto inline-flex justify-center items-center px-6 py-3 bg-white text-gray-700 font-medium rounded-xl border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 shadow-sm transform hover:-translate-y-0.5 transition-all duration-200">
+                        <i class="fas fa-times mr-2"></i>
+                        Cancel
+                    </a>
+                </div>
+                
+                <!-- Small note -->
+                <p class="text-xs text-gray-500 text-center mt-4">
+                    This action is permanent. Consider archiving instead if you might need this book later.
+                </p>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Optional: Add animation -->
+<style>
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.fixed.inset-0 {
+    animation: fadeIn 0.2s ease-out;
+}
+</style>
+{% endblock %}

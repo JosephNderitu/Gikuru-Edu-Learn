@@ -1,0 +1,503 @@
+<!-- notes/books/student_book_list.html -->
+{% extends 'core/base_with_sidebar.html' %}
+{% load static %}
+
+{% block title %}Books Library{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-b from-gray-50 to-blue-50 p-4 sm:p-6 lg:p-8">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Books Library</h1>
+            <p class="text-gray-600">Access all required and recommended reading materials for your courses</p>
+        </div>
+
+        <!-- Search and Filter Section -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <!-- Search Form -->
+                <form method="GET" action="{% url 'book_list' %}" class="flex-1">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-search text-gray-400"></i>
+                        </div>
+                        <input type="text" 
+                               name="q" 
+                               value="{{ request.GET.q }}"
+                               placeholder="Search books by title, author, subject, or ISBN..." 
+                               class="pl-10 pr-4 py-3 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                        <button type="submit" class="absolute right-2 top-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition">
+                            Search
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Filter Buttons -->
+                <div class="flex flex-wrap gap-2">
+                    <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}status=required"
+                       class="px-4 py-2 rounded-lg {% if request.GET.status == 'required' %}bg-amber-100 text-amber-800 border border-amber-300{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %} transition">
+                        <i class="fas fa-star mr-2"></i>Required
+                    </a>
+                    <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}status=recommended"
+                       class="px-4 py-2 rounded-lg {% if request.GET.status == 'recommended' %}bg-blue-100 text-blue-800 border border-blue-300{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %} transition">
+                        <i class="fas fa-bookmark mr-2"></i>Recommended
+                    </a>
+                    <a href="{% url 'book_list' %}"
+                       class="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition">
+                        <i class="fas fa-filter-circle-xmark mr-2"></i>Clear Filters
+                    </a>
+                </div>
+            </div>
+
+            <!-- Advanced Filters (Collapsible) -->
+            <div class="mt-4 pt-4 border-t border-gray-100">
+                <button onclick="toggleAdvancedFilters()" 
+                        class="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center">
+                    <i class="fas fa-sliders-h mr-2"></i>
+                    Advanced Filters
+                    <i id="filter-arrow" class="fas fa-chevron-down ml-1"></i>
+                </button>
+                
+                <div id="advanced-filters" class="hidden mt-4">
+                    <form method="GET" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                            <select name="subject" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">All Subjects</option>
+                                {% for subject in enrolled_subjects %}
+                                <option value="{{ subject.id }}" {% if request.GET.subject == subject.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ subject.title }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Year Published</label>
+                            <select name="year" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">All Years</option>
+                                {% for year in year_range %}
+                                <option value="{{ year }}" {% if request.GET.year == year|stringformat:"s" %}selected{% endif %}>
+                                    {{ year }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Language</label>
+                            <select name="language" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">All Languages</option>
+                                <option value="English" {% if request.GET.language == 'English' %}selected{% endif %}>English</option>
+                                <option value="French" {% if request.GET.language == 'French' %}selected{% endif %}>French</option>
+                                <option value="Spanish" {% if request.GET.language == 'Spanish' %}selected{% endif %}>Spanish</option>
+                                <option value="German" {% if request.GET.language == 'German' %}selected{% endif %}>German</option>
+                            </select>
+                        </div>
+                        
+                        <div class="md:col-span-3 flex justify-end space-x-2">
+                            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                                Apply Filters
+                            </button>
+                            <a href="{% url 'book_list' %}" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                                Reset
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Bar -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                        <i class="fas fa-book text-blue-600"></i>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-gray-900">{{ total_books }}</div>
+                        <p class="text-sm text-gray-600">Total Books</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center mr-3">
+                        <i class="fas fa-star text-amber-600"></i>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-gray-900">{{ required_books }}</div>
+                        <p class="text-sm text-gray-600">Required Reading</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+                        <i class="fas fa-graduation-cap text-purple-600"></i>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-gray-900">{{ subject_count }}</div>
+                        <p class="text-sm text-gray-600">Subjects</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center mr-3">
+                        <i class="fas fa-file-pdf text-emerald-600"></i>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-gray-900">{{ pdf_count }}</div>
+                        <p class="text-sm text-gray-600">Available PDFs</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Books Table -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <!-- Table Header -->
+            <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-lg font-semibold text-gray-900">All Books</h2>
+                    <span class="text-sm text-gray-600">
+                        Showing {{ books.start_index }}-{{ books.end_index }} of {{ books.paginator.count }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Desktop Table View -->
+            <div class="hidden md:block overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Book Details
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Subject & Teacher
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Publication Info
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-100">
+                        {% for book in books %}
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <!-- Book Details Column -->
+                            <td class="px-6 py-4">
+                                <div class="flex">
+                                    <!-- Cover Image -->
+                                    <div class="flex-shrink-0 mr-4">
+                                        {% if book.cover_image %}
+                                        <img src="{{ book.cover_image.url }}" 
+                                             alt="{{ book.title }} cover" 
+                                             class="w-16 h-20 object-cover rounded-lg shadow-sm border border-gray-200">
+                                        {% else %}
+                                        <div class="w-16 h-20 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-lg flex items-center justify-center border border-gray-200">
+                                            <i class="fas fa-book text-blue-600"></i>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <!-- Title & Author -->
+                                    <div class="min-w-0 flex-1">
+                                        <div class="flex items-start justify-between">
+                                            <div>
+                                                <h3 class="font-semibold text-gray-900 text-sm leading-tight mb-1">
+                                                    {{ book.title }}
+                                                </h3>
+                                                {% if book.subtitle %}
+                                                <p class="text-xs text-gray-600 italic mb-2">{{ book.subtitle }}</p>
+                                                {% endif %}
+                                                <p class="text-xs text-gray-500 mb-2">
+                                                    <i class="fas fa-user-edit mr-1"></i>
+                                                    {{ book.author_last_name }}, {{ book.author_first_name.0 }}.
+                                                </p>
+                                            </div>
+                                            <!-- Status Badge -->
+                                            <div class="ml-2">
+                                                {% if book.is_required %}
+                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                                                    <i class="fas fa-star mr-1 text-xs"></i>Required
+                                                </span>
+                                                {% else %}
+                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                    <i class="fas fa-bookmark mr-1 text-xs"></i>Recommended
+                                                </span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Description Preview -->
+                                        {% if book.description %}
+                                        <p class="text-xs text-gray-600 mt-2 line-clamp-2">
+                                            {{ book.description|truncatewords:20 }}
+                                        </p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            
+                            <!-- Subject & Teacher Column -->
+                            <td class="px-6 py-4">
+                                <div class="space-y-2">
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-900 mb-1">{{ book.subject.title }}</p>
+                                        <div class="flex items-center text-xs text-gray-500">
+                                            <i class="fas fa-chalkboard-teacher mr-1"></i>
+                                            {{ book.teacher.get_full_name|default:book.teacher.username }}
+                                        </div>
+                                    </div>
+                                    {% if book.language %}
+                                    <div class="flex items-center text-xs text-gray-500">
+                                        <i class="fas fa-language mr-1"></i>
+                                        {{ book.language }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            
+                            <!-- Publication Info Column -->
+                            <td class="px-6 py-4">
+                                <div class="space-y-1 text-sm">
+                                    <div class="flex items-center text-gray-700">
+                                        <i class="fas fa-calendar-alt mr-2 w-4 text-gray-400"></i>
+                                        {{ book.publication_year }}
+                                        {% if book.edition > 1 %}
+                                        <span class="ml-2 px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded">
+                                            {{ book.edition }}th Ed.
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                    {% if book.publisher %}
+                                    <div class="flex items-center text-gray-700">
+                                        <i class="fas fa-building mr-2 w-4 text-gray-400"></i>
+                                        <span class="truncate">{{ book.publisher|truncatechars:30 }}</span>
+                                    </div>
+                                    {% endif %}
+                                    {% if book.isbn %}
+                                    <div class="flex items-center text-gray-700">
+                                        <i class="fas fa-barcode mr-2 w-4 text-gray-400"></i>
+                                        <code class="text-xs">{{ book.isbn }}</code>
+                                    </div>
+                                    {% endif %}
+                                    {% if book.pdf_file %}
+                                    <div class="flex items-center text-gray-700">
+                                        <i class="fas fa-file-pdf mr-2 w-4 text-red-400"></i>
+                                        <span class="text-xs">{{ book.get_file_size }}</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            
+                            <!-- Actions Column -->
+                            <td class="px-6 py-4">
+                                <div class="flex flex-col space-y-2">
+                                    <a href="{% url 'book_detail' book.id %}" 
+                                       class="inline-flex items-center justify-center px-3 py-2 bg-blue-50 text-blue-700 text-sm font-medium rounded-lg hover:bg-blue-100 transition">
+                                        <i class="fas fa-eye mr-2"></i>
+                                        View Details
+                                    </a>
+                                    
+                                    {% if book.pdf_file %}
+                                    <a href="{{ book.pdf_file.url }}" 
+                                       target="_blank"
+                                       class="inline-flex items-center justify-center px-3 py-2 bg-red-50 text-red-700 text-sm font-medium rounded-lg hover:bg-red-100 transition">
+                                        <i class="fas fa-file-pdf mr-2"></i>
+                                        Read PDF
+                                    </a>
+                                    {% endif %}
+                                    
+                                    {% if book.url %}
+                                    <a href="{{ book.url }}" 
+                                       target="_blank"
+                                       class="inline-flex items-center justify-center px-3 py-2 bg-emerald-50 text-emerald-700 text-sm font-medium rounded-lg hover:bg-emerald-100 transition">
+                                        <i class="fas fa-external-link-alt mr-2"></i>
+                                        Visit Website
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="px-6 py-12 text-center">
+                                <div class="text-gray-400">
+                                    <i class="fas fa-book-open text-4xl mb-4"></i>
+                                    <p class="text-lg font-medium text-gray-900 mb-2">No Books Found</p>
+                                    <p class="text-gray-600">No books are available for your enrolled courses.</p>
+                                    <p class="text-sm text-gray-500 mt-2">Contact your teachers if you believe this is an error.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Mobile Card View -->
+            <div class="md:hidden">
+                {% for book in books %}
+                <div class="border-b border-gray-100 p-4 hover:bg-gray-50 transition-colors">
+                    <div class="flex">
+                        <!-- Cover Image -->
+                        <div class="flex-shrink-0 mr-4">
+                            {% if book.cover_image %}
+                            <img src="{{ book.cover_image.url }}" 
+                                 alt="{{ book.title }} cover" 
+                                 class="w-12 h-16 object-cover rounded-lg shadow-sm border border-gray-200">
+                            {% else %}
+                            <div class="w-12 h-16 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-lg flex items-center justify-center border border-gray-200">
+                                <i class="fas fa-book text-blue-600 text-sm"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Content -->
+                        <div class="flex-1">
+                            <div class="flex justify-between items-start mb-2">
+                                <div class="flex-1">
+                                    <h3 class="font-semibold text-gray-900 text-sm mb-1">{{ book.title|truncatechars:40 }}</h3>
+                                    <p class="text-xs text-gray-500">
+                                        <i class="fas fa-user-edit mr-1"></i>
+                                        {{ book.author_last_name }}, {{ book.author_first_name.0 }}.
+                                    </p>
+                                </div>
+                                {% if book.is_required %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                                    <i class="fas fa-star mr-1 text-xs"></i>Required
+                                </span>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="text-xs text-gray-600 mb-3">
+                                <div class="flex items-center mb-1">
+                                    <i class="fas fa-graduation-cap mr-2 w-3"></i>
+                                    {{ book.subject.title }}
+                                </div>
+                                <div class="flex items-center mb-1">
+                                    <i class="fas fa-chalkboard-teacher mr-2 w-3"></i>
+                                    {{ book.teacher.get_full_name|default:book.teacher.username }}
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-calendar-alt mr-2 w-3"></i>
+                                    {{ book.publication_year }}
+                                    {% if book.edition > 1 %}
+                                    <span class="ml-2">• {{ book.edition }}th Ed.</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="flex space-x-2">
+                                <a href="{% url 'book_detail' book.id %}" 
+                                   class="flex-1 inline-flex items-center justify-center px-3 py-2 bg-blue-50 text-blue-700 text-xs font-medium rounded-lg hover:bg-blue-100 transition">
+                                    <i class="fas fa-eye mr-2"></i>
+                                    View
+                                </a>
+                                
+                                {% if book.pdf_file %}
+                                <a href="{{ book.pdf_file.url }}" 
+                                   target="_blank"
+                                   class="flex-1 inline-flex items-center justify-center px-3 py-2 bg-red-50 text-red-700 text-xs font-medium rounded-lg hover:bg-red-100 transition">
+                                    <i class="fas fa-file-pdf mr-2"></i>
+                                    PDF
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="p-8 text-center">
+                    <i class="fas fa-book-open text-3xl text-gray-300 mb-4"></i>
+                    <p class="text-gray-600">No books found for your enrolled courses</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        {% if books.paginator.num_pages > 1 %}
+        <div class="mt-6 flex items-center justify-between">
+            <div class="text-sm text-gray-700">
+                Page {{ books.number }} of {{ books.paginator.num_pages }}
+            </div>
+            <div class="flex space-x-2">
+                {% if books.has_previous %}
+                <a href="?page={{ books.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                   class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition flex items-center">
+                    <i class="fas fa-chevron-left mr-2"></i>
+                    Previous
+                </a>
+                {% endif %}
+                
+                {% for num in books.paginator.page_range %}
+                    {% if num == books.number %}
+                    <span class="px-4 py-2 bg-blue-600 text-white rounded-lg">{{ num }}</span>
+                    {% elif num > books.number|add:'-3' and num < books.number|add:'3' %}
+                    <a href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                       class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                        {{ num }}
+                    </a>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if books.has_next %}
+                <a href="?page={{ books.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                   class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition flex items-center">
+                    Next
+                    <i class="fas fa-chevron-right ml-2"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- JavaScript for Advanced Filters -->
+<script>
+function toggleAdvancedFilters() {
+    const filters = document.getElementById('advanced-filters');
+    const arrow = document.getElementById('filter-arrow');
+    
+    if (filters.classList.contains('hidden')) {
+        filters.classList.remove('hidden');
+        arrow.classList.remove('fa-chevron-down');
+        arrow.classList.add('fa-chevron-up');
+    } else {
+        filters.classList.add('hidden');
+        arrow.classList.remove('fa-chevron-up');
+        arrow.classList.add('fa-chevron-down');
+    }
+}
+
+// Initialize filters based on URL
+document.addEventListener('DOMContentLoaded', function() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.toString().includes('subject') || params.toString().includes('year') || params.toString().includes('language')) {
+        toggleAdvancedFilters();
+    }
+});
+</script>
+
+<style>
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+</style>
+{% endblock %}

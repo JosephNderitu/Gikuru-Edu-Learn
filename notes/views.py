@@ -1,13 +1,14 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from .models import Assignment, Submission, ClassMaterial
-from .forms import AssignmentForm, SubmissionForm, ClassMaterialForm
+from .models import Assignment, Submission, ClassMaterial, Book
+from .forms import AssignmentForm, SubmissionForm, ClassMaterialForm, BookForm
 from courses.models import Subject, Enrollment
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
-from django.core.paginator import Paginator
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import JsonResponse
 from django.template.loader import render_to_string
+from django.db.models import Q
 
 # notes/views.py - Update create_assignment function
 @login_required
@@ -247,3 +248,172 @@ def delete_material(request, material_id):
         'material': material
     })
 
+# notes/views.py - Add these views
+
+# Book views
+@login_required
+def book_list(request):
+    """List all books for the current user"""
+    if request.user.role == 'teacher':
+        books = Book.objects.filter(teacher=request.user).order_by('-created_at')
+        template = 'notes/books/teacher_book_list.html'
+        
+        return render(request, template, {
+            'books': books,
+        })
+    
+    else:  # student
+        # Get books from enrolled subjects
+        enrolled_subjects = Enrollment.objects.filter(student=request.user).values_list('subject', flat=True)
+        books = Book.objects.filter(subject__in=enrolled_subjects).order_by('-created_at')
+        
+        # Search functionality
+        search_query = request.GET.get('q', '')
+        if search_query:
+            books = books.filter(
+                Q(title__icontains=search_query) |
+                Q(subtitle__icontains=search_query) |
+                Q(author_first_name__icontains=search_query) |
+                Q(author_last_name__icontains=search_query) |
+                Q(additional_authors__icontains=search_query) |
+                Q(description__icontains=search_query) |
+                Q(isbn__icontains=search_query) |
+                Q(publisher__icontains=search_query) |
+                Q(subject__title__icontains=search_query)
+            )
+        
+        # Filter by status
+        status = request.GET.get('status')
+        if status == 'required':
+            books = books.filter(is_required=True)
+        elif status == 'recommended':
+            books = books.filter(is_required=False)
+        
+        # Filter by subject
+        subject_id = request.GET.get('subject')
+        if subject_id:
+            books = books.filter(subject_id=subject_id)
+        
+        # Filter by year
+        year = request.GET.get('year')
+        if year:
+            books = books.filter(publication_year=year)
+        
+        # Filter by language
+        language = request.GET.get('language')
+        if language:
+            books = books.filter(language__iexact=language)
+        
+        # Get unique years for filter dropdown
+        year_range = sorted(set(Book.objects.filter(subject__in=enrolled_subjects)
+                               .values_list('publication_year', flat=True).distinct()), reverse=True)
+        
+        # Statistics for the dashboard
+        total_books = books.count()
+        required_books = Book.objects.filter(subject__in=enrolled_subjects, is_required=True).count()
+        subject_count = Subject.objects.filter(id__in=enrolled_subjects).count()
+        pdf_count = Book.objects.filter(subject__in=enrolled_subjects, pdf_file__isnull=False).count()
+        
+        # Pagination
+        paginator = Paginator(books, 15)  # 15 books per page for tabular view
+        page = request.GET.get('page')
+        try:
+            books = paginator.page(page)
+        except PageNotAnInteger:
+            books = paginator.page(1)
+        except EmptyPage:
+            books = paginator.page(paginator.num_pages)
+        
+        return render(request, 'notes/books/student_book_list.html', {
+            'books': books,
+            'enrolled_subjects': Subject.objects.filter(id__in=enrolled_subjects),
+            'year_range': year_range,
+            'total_books': total_books,
+            'required_books': required_books,
+            'subject_count': subject_count,
+            'pdf_count': pdf_count,
+        })
+
+@login_required
+def add_book(request):
+    """Add a new book"""
+    if request.user.role != 'teacher':
+        messages.error(request, "Only teachers can add books.")
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        form = BookForm(request.POST, request.FILES, user=request.user)
+        if form.is_valid():
+            book = form.save(commit=False)
+            book.teacher = request.user
+            book.save()
+            messages.success(request, "Book added successfully!")
+            
+            # Redirect to book list or subject page
+            if 'subject' in request.GET:
+                return redirect('view_subject', subject_id=book.subject.id)
+            return redirect('book_list')
+    else:
+        # Prefill subject if provided
+        initial = {}
+        subject_id = request.GET.get('subject')
+        if subject_id:
+            try:
+                subject = Subject.objects.get(id=subject_id, teacher=request.user)
+                initial['subject'] = subject
+            except Subject.DoesNotExist:
+                pass
+        
+        form = BookForm(initial=initial, user=request.user)
+    
+    return render(request, 'notes/books/add_book.html', {'form': form})
+
+@login_required
+def edit_book(request, book_id):
+    """Edit an existing book"""
+    if request.user.role != 'teacher':
+        messages.error(request, "Only teachers can edit books.")
+        return redirect('dashboard')
+    
+    book = get_object_or_404(Book, id=book_id, teacher=request.user)
+    
+    if request.method == 'POST':
+        form = BookForm(request.POST, request.FILES, instance=book, user=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Book updated successfully!")
+            return redirect('book_list')
+    else:
+        form = BookForm(instance=book, user=request.user)
+    
+    return render(request, 'notes/books/edit_book.html', {'form': form, 'book': book})
+
+@login_required
+def delete_book(request, book_id):
+    """Delete a book"""
+    if request.user.role != 'teacher':
+        messages.error(request, "Only teachers can delete books.")
+        return redirect('dashboard')
+    
+    book = get_object_or_404(Book, id=book_id, teacher=request.user)
+    
+    if request.method == 'POST':
+        book.delete()
+        messages.success(request, "Book deleted successfully!")
+        return redirect('book_list')
+    
+    return render(request, 'notes/books/delete_book.html', {'book': book})
+
+@login_required
+def book_detail(request, book_id):
+    """View book details"""
+    if request.user.role == 'teacher':
+        book = get_object_or_404(Book, id=book_id, teacher=request.user)
+    else:  # student
+        # Check if student is enrolled in the subject
+        book = get_object_or_404(Book, id=book_id)
+        if not Enrollment.objects.filter(student=request.user, subject=book.subject).exists():
+            messages.error(request, "You are not enrolled in this course.")
+            return redirect('dashboard')
+    
+    return render(request, 'notes/books/book_detail.html', {'book': book})

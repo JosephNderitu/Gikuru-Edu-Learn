@@ -1,0 +1,83 @@
+<!-- notes/books/book_card.html -->
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300">
+    <!-- Book Cover -->
+    <div class="relative h-48 overflow-hidden rounded-t-xl">
+        {% if book.cover_image %}
+            <img src="{{ book.cover_image.url }}" 
+                 alt="{{ book.title }} cover" 
+                 class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">
+        {% else %}
+            <div class="w-full h-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
+                <i class="fas fa-book text-4xl text-blue-400"></i>
+            </div>
+        {% endif %}
+        
+        <!-- Required Badge -->
+        {% if book.is_required %}
+        <div class="absolute top-2 right-2">
+            <span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full font-semibold">
+                Required
+            </span>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Book Info -->
+    <div class="p-4">
+        <h4 class="font-bold text-gray-800 text-sm mb-1 line-clamp-2">{{ book.title }}</h4>
+        
+        <!-- Author -->
+        <p class="text-xs text-gray-600 mb-2">
+            <i class="fas fa-user text-gray-400 mr-1"></i>
+            {{ book.author_last_name }}, {{ book.author_first_name|first }}.
+        </p>
+        
+        <!-- Publication Info -->
+        <div class="flex items-center justify-between text-xs text-gray-500 mb-3">
+            <span>
+                <i class="fas fa-calendar text-gray-400 mr-1"></i>
+                {{ book.publication_year }}
+            </span>
+            {% if book.pages %}
+            <span>
+                <i class="fas fa-file text-gray-400 mr-1"></i>
+                {{ book.pages }} pages
+            </span>
+            {% endif %}
+        </div>
+        
+        <!-- Course Badge -->
+        <div class="mb-3">
+            <span class="inline-flex items-center px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs">
+                <i class="fas fa-book-open mr-1"></i>
+                {{ book.subject.title|truncatechars:20 }}
+            </span>
+        </div>
+        
+        <!-- File Info -->
+        <div class="flex items-center justify-between text-xs text-gray-500 mb-4">
+            <span>
+                <i class="fas fa-file-pdf text-red-400 mr-1"></i>
+                {{ book.get_file_size }}
+            </span>
+            <span>
+                <i class="fas fa-language text-gray-400 mr-1"></i>
+                {{ book.language }}
+            </span>
+        </div>
+        
+        <!-- Actions -->
+        <div class="flex space-x-2">
+            <a href="{% url 'book_detail' book.id %}" 
+               class="flex-1 bg-blue-50 text-blue-600 hover:bg-blue-100 text-xs font-medium py-2 px-3 rounded-lg text-center transition">
+                <i class="fas fa-eye mr-1"></i> View
+            </a>
+            {% if request.user.role == 'teacher' %}
+            <a href="{% url 'edit_book' book.id %}" 
+               class="px-3 py-2 text-green-600 hover:text-green-800 transition">
+                <i class="fas fa-edit"></i>
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
