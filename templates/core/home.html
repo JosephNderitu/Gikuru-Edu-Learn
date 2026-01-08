@@ -483,10 +483,19 @@
 <!--testimonials section-->
     <div class="lg:p-10 p-6 bg-gray-50">
       <div class="max-w-6xl max-lg:max-w-3xl mx-auto">
-        <div class="max-w-2xl">
-          <h2 class="text-slate-900 text-2xl font-bold">What our happy client say</h2>
-          <p class="text-[15px] text-slate-600 mt-4 leading-relaxed">See what our happy clients have to say. They’ve shared how our templates helped them launch quickly, look professional, and grow with ease.</p>
-        </div>
+       <div class="max-w-2xl">
+          <p class="text-sm font-semibold tracking-widest text-orange-500 uppercase mb-2">
+            Testimonials
+          </p>
+
+          <h2 class="text-3xl md:text-4xl font-extrabold text-slate-900 leading-tight">
+            What Our Happy <span class="text-orange-500">Clients Say</span>
+          </h2>
+
+          <p class="text-[15px] text-slate-600 mt-4 leading-relaxed">
+            See what our happy clients have to say. They’ve shared how our templates helped them launch quickly, look professional, and grow with ease.
+          </p>
+      </div>
 
         <div class="columns-1 sm:columns-2 lg:columns-3 space-y-4 max-sm:max-w-md max-sm:mx-auto mt-12">
           <div class="break-inside-avoid p-6 rounded-lg bg-white shadow-sm border border-gray-300">
@@ -744,22 +753,79 @@
       </div>
     </div>
 <!--end of section-->
-<hr>
 
 <!--CTA section-->
-    <div class="max-w-4xl mx-auto">
-      <div class="bg-gradient-to-br from-black via-black to-purple-600 px-8 sm:px-16 py-12 w-full rounded-3xl">
-        <div class="max-w-md">
-          <h2 class="text-white sm:text-5xl text-4xl font-semibold !leading-tight">Your Free Guide is Ready!</h2>
-          <div class="mt-3">
-            <p class="text-slate-200 text-base leading-relaxed">Discover insights, strategies, and resources designed to help you grow faster.</p>
+  <section class="py-20">
+
+    <div class="max-w-6xl mx-auto px-6">
+      <div
+        class="relative overflow-hidden rounded-[3rem] px-6 py-20 md:px-16 text-center
+              bg-gradient-to-br from-indigo-900 via-indigo-800 to-slate-700">
+
+        <!-- GRID / SQUARE PATTERN -->
+        <div
+          class="pointer-events-none absolute inset-0 opacity-20
+                bg-[linear-gradient(to_right,rgba(255,255,255,0.15)_1px,transparent_1px),
+                    linear-gradient(to_bottom,rgba(255,255,255,0.15)_1px,transparent_1px)]
+                bg-[size:36px_36px]">
+        </div>
+
+        <!-- CONTENT -->
+        <div class="relative z-10 max-w-3xl mx-auto">
+
+          <!-- Badge -->
+          <span
+            class="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-full
+                  bg-white/10 border border-white/20 text-white text-sm font-medium backdrop-blur">
+            <i class="fa-solid fa-sparkles text-orange-400"></i>
+            Start for Free Today
+          </span>
+
+          <!-- Heading -->
+          <h2 class="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white leading-tight">
+            Ready to Transform Your
+            <span class="block text-orange-400 mt-2">
+              Learning Experience?
+            </span>
+          </h2>
+
+          <!-- Subtitle -->
+          <p class="mt-6 text-base md:text-lg text-indigo-100 leading-relaxed">
+            Join thousands of teachers and students who are already experiencing
+            the future of education. Create your free account in seconds.
+          </p>
+
+          <!-- Actions -->
+          <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+
+            <a
+              href="#"
+              class="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl
+                    bg-orange-500 text-white font-semibold transition
+                    hover:bg-orange-400 hover:shadow-lg">
+              Get Started Free
+              <i class="fa-solid fa-arrow-right"></i>
+            </a>
+
+            <a
+              href="#"
+              class="inline-flex items-center justify-center px-8 py-4 rounded-xl
+                    border border-white/40 text-white font-semibold
+                    backdrop-blur transition hover:bg-white/10">
+              Schedule a Demo
+            </a>
+
           </div>
 
-          <div class="mt-6">
-            <button type="button" class="px-6 py-3 rounded-full text-slate-900 text-base tracking-wider font-medium border-0 outline-none bg-white hover:bg-gray-200 cursor-pointer">Download the Free Guide</button>
-          </div>
+          <!-- Fine print -->
+          <p class="mt-8 text-sm text-indigo-200">
+            No credit card required · Free forever for basic features · Cancel anytime
+          </p>
+
         </div>
       </div>
     </div>
+
+  </section>
 <!--end of CTA section-->
 {% endblock %}
