@@ -123,7 +123,6 @@ def student_subject_list(request):
         'search_query': search_query,
     })
 
-
 @login_required
 def enroll_subject(request, subject_id):
     if request.user.role != 'student':
@@ -312,4 +311,82 @@ def view_subject_student(request, subject_id):
         'empty_message': empty_message,
         'empty_description': empty_description,
     })
+
+from django.shortcuts import render
+from django.db.models import Count
+import random
+
+def popular_courses_view(request):
+    """
+    Renders the popular courses section with dynamic data
+    """
+    # Get popular courses with enrollment counts
+    courses = Subject.objects.annotate(
+        student_count=Count('enrollments')
+    ).order_by('-student_count')[:4]  # Get top 4 courses
     
+    # Color schemes for dynamic styling
+    color_schemes = [
+        {'from': 'from-indigo-500', 'to': 'to-indigo-600', 'text': 'text-indigo-700'},
+        {'from': 'from-pink-500', 'to': 'to-rose-500', 'text': 'text-pink-600'},
+        {'from': 'from-emerald-500', 'to': 'to-teal-500', 'text': 'text-emerald-600'},
+        {'from': 'from-purple-500', 'to': 'to-fuchsia-500', 'text': 'text-purple-600'},
+        {'from': 'from-blue-500', 'to': 'to-cyan-500', 'text': 'text-blue-600'},
+        {'from': 'from-amber-500', 'to': 'to-orange-500', 'text': 'text-amber-600'},
+        {'from': 'from-red-500', 'to': 'to-pink-500', 'text': 'text-red-600'},
+        {'from': 'from-green-500', 'to': 'to-lime-500', 'text': 'text-green-600'},
+    ]
+    
+    # Prepare courses data
+    courses_data = []
+    for course in courses:
+        # Get teacher name
+        teacher_name = f"{course.teacher.first_name} {course.teacher.last_name}".strip()
+        if not teacher_name:
+            teacher_name = course.teacher.username
+        
+        # Select random color
+        color = random.choice(color_schemes)
+        
+        # Determine category (simple logic based on title)
+        title_lower = course.title.lower()
+        if any(word in title_lower for word in ['web', 'development', 'programming', 'code', 'software']):
+            category = 'Development'
+        elif any(word in title_lower for word in ['marketing', 'digital', 'social', 'brand', 'advertising']):
+            category = 'Marketing'
+        elif any(word in title_lower for word in ['data', 'machine', 'learning', 'ai', 'analytics', 'python']):
+            category = 'Data Science'
+        elif any(word in title_lower for word in ['design', 'ui', 'ux', 'graphic', 'figma', 'adobe']):
+            category = 'Design'
+        elif any(word in title_lower for word in ['business', 'finance', 'management', 'entrepreneur']):
+            category = 'Business'
+        elif any(word in title_lower for word in ['science', 'math', 'physics', 'chemistry']):
+            category = 'Science'
+        else:
+            category = 'General'
+        
+        # Generate static values (you can make these fields later)
+        hours_options = [28, 32, 42, 56, 64, 72]
+        lessons_options = [94, 112, 156, 186, 200, 240]
+        rating_options = [4.7, 4.8, 4.9, 5.0]
+        
+        courses_data.append({
+            'id': course.id,
+            'title': course.title,
+            'teacher_name': teacher_name,
+            'category': category,
+            'color_from': color['from'],
+            'color_to': color['to'],
+            'text_color': color['text'],
+            'student_count': course.student_count or 0,
+            'hours': random.choice(hours_options),
+            'lessons': random.choice(lessons_options),
+            'rating': random.choice(rating_options),
+            'description': course.description[:100] + '...' if course.description else '',
+        })
+    
+    context = {
+        'popular_courses': courses_data,
+    }
+    
+    return render(request, 'courses/popular_courses_section.html', context)
