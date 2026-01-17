@@ -27,7 +27,15 @@ urlpatterns = [
     path('courses/', include('courses.urls')),
     path('notes/', include('notes.urls')),
     #path('chat/', include('chat.urls')),
+    path('api/', include('courses.api_urls')),
 ]
+# Add error handlers at the end
+handler404 = 'core.views.handler404'
+handler500 = 'core.views.handler500'
+handler403 = 'core.views.handler403'
+handler400 = 'core.views.handler400'
+
+# Serve media and static files during development
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns  += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

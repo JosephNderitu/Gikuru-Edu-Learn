@@ -1,0 +1,65 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="min-h-[70vh] flex items-center justify-center px-4">
+    <div class="max-w-md w-full text-center">
+        <!-- Animated 500 Graphic -->
+        <div class="relative mb-8">
+            <div class="w-40 h-40 mx-auto relative">
+                <div class="absolute inset-0 bg-red-100 rounded-full animate-ping opacity-75"></div>
+                <div class="absolute inset-4 bg-red-200 rounded-full flex items-center justify-center">
+                    <i class="fas fa-exclamation-triangle text-6xl text-red-600"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Error Message -->
+        <h1 class="text-5xl font-bold text-gray-800 mb-4">
+            500
+        </h1>
+        
+        <h2 class="text-2xl font-bold text-gray-700 mb-4">
+            Internal Server Error
+        </h2>
+        
+        <p class="text-gray-600 mb-8 text-lg leading-relaxed">
+            Something went wrong on our end. Our team has been notified and we're working to fix it.
+            Please try again in a few moments.
+        </p>
+        
+        <!-- Action Buttons -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <a href="{% url 'home' %}" 
+               class="py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 flex items-center justify-center">
+                <i class="fas fa-home mr-2"></i>Home
+            </a>
+            
+            <a href="mailto:support@gikuruedu.com" 
+               class="py-3 px-6 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 flex items-center justify-center">
+                <i class="fas fa-headset mr-2"></i>Contact Support
+            </a>
+        </div>
+        
+        <!-- Status -->
+        <div class="mt-10 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <div class="flex items-center justify-center space-x-2 text-gray-500 mb-2">
+                <div class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                <span class="text-sm font-medium">Server Status: Experiencing Issues</span>
+            </div>
+            <p class="text-sm text-gray-500">Last checked: <span id="current-time">Just now</span></p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Update current time
+    function updateTime() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        document.getElementById('current-time').textContent = timeString;
+    }
+    updateTime();
+    setInterval(updateTime, 60000); // Update every minute
+</script>
+{% endblock %}

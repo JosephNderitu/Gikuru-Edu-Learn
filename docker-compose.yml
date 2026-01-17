@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./staticfiles:/app/staticfiles
+      - ./media:/app/media
+      - .:/app
+    environment:
+      - DEBUG=False
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # CRITICAL: Allows Docker to access host
+    command: >
+      sh -c "python manage.py migrate &&
+             gunicorn --bind 0.0.0.0:8000 smartlearn.wsgi:application"
+      sh -c "echo 'Waiting for database...' &&
+             sleep 30 &&
+             python manage.py migrate &&
+             gunicorn --bind 0.0.0.0:8000 smartlearn.wsgi:application"
+
+volumes:
+  mysql_data:
